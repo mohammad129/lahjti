@@ -1,0 +1,478 @@
+{
+  "@@locale": "en",
+  "appName": "Lahjti",
+  "welcome": "Welcome",
+  "startYourJourney": "Start your journey",
+  "chooseYourLanguage": "Choose your language",
+  "continueText": "Continue",
+  "back": "Back",
+  "next": "Next",
+  "home": "Home",
+  "tutor": "Tutor",
+  "learning": "Learning",
+  "vocabulary": "Vocabulary",
+  "exams": "Exams",
+  "progress": "Progress",
+  "profile": "Profile",
+  "subscription": "Subscription",
+  "onboarding": "Onboarding",
+  "loading": "Loading...",
+  "somethingWentWrong": "A minor glitch occurred. Please try again.",
+  "tryAgain": "Try again",
+  "comingSoon": "Coming Soon",
+  "comingSoonDesc": "This feature is currently in development.",
+  "welcomeTagline": "Speak it... don't just memorize it.",
+  "welcomeSubtitle": "Your AI tutor is with you: listens, speaks, and corrects you.",
+  "welcomeButtonCta": "Start Your Journey 🚀",
+  "connectionError": "No internet connection. Please check your network.",
+  "timeoutError": "Connection timed out. Please try again.",
+  "unauthorizedError": "Session expired. Please sign in again.",
+  "serverError": "Server error. Please try again shortly.",
+  "emptyStateTitle": "No Data Found",
+  "emptyStateMessage": "There is nothing here yet.",
+
+  "stepProgress": "Step {current} of {total}",
+  "@stepProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "targetLanguageTitle": "Which language do you want to learn?",
+  "targetLanguageSubtitle": "Choose the language you want to speak with confidence.",
+  "langEnglish": "English",
+  "langSpanish": "Spanish",
+  "langFrench": "French",
+  "langGerman": "German",
+  "langItalian": "Italian",
+  "langTurkish": "Turkish",
+  "langJapanese": "Japanese",
+  "langChinese": "Chinese",
+  "langKorean": "Korean",
+
+  "ageGroupTitle": "How old are you?",
+  "ageGroupSubtitle": "We will use your age to tailor the learning style and content for you.",
+  "age6_10": "6–10",
+  "age11_14": "11–14",
+  "age15_18": "15–18",
+  "age19_25": "19–25",
+  "age26_35": "26–35",
+  "age36_50": "36–50",
+  "age50Plus": "50+",
+
+  "nativeLanguageTitle": "What is your native language?",
+  "nativeLanguageSubtitle": "This helps us explain and translate concepts in the clearest way.",
+  "langArabic": "Arabic",
+  "langOther": "Other Language",
+
+  "learningGoalTitle": "Why do you want to learn this language?",
+  "learningGoalSubtitle": "We will focus your conversations and exercises around your primary goal.",
+  "goalStudy": "Academics & Study",
+  "goalStudyDesc": "For university, school, and academic examinations",
+  "goalWork": "Career & Work",
+  "goalWorkDesc": "For business meetings, workplace, and job interviews",
+  "goalTravel": "Travel & Exploration",
+  "goalTravelDesc": "For airports, hotels, and exploring countries with ease",
+  "goalConversation": "Conversational Fluency",
+  "goalConversationDesc": "To overcome hesitation and speak naturally with people",
+  "goalDaily": "Daily Life",
+  "goalDailyDesc": "To connect with friends and enjoy media/content",
+  "goalHobby": "Personal Interest",
+  "goalHobbyDesc": "A passion for learning a rich and exciting new language",
+  "goalComprehensive": "Comprehensive Mastery",
+  "goalComprehensiveDesc": "To build all skills including grammar, vocabulary, and pronunciation",
+
+  "experienceTitle": "How much do you know about the language?",
+  "experienceSubtitle": "No worries, this simply helps us start you in the right place.",
+  "expZeroTitle": "Almost not a word",
+  "expZeroDesc": "Awesome! We will start with you from the very beginning.",
+  "expBasicTitle": "I know basic words",
+  "expBasicDesc": "Great! We will build upon the vocabulary you already know.",
+  "expIntermediateTitle": "I understand & speak a bit",
+  "expIntermediateDesc": "Nice! We will focus on speech flow and conversational speed.",
+  "expConversationalTitle": "I can have simple conversations",
+  "expConversationalDesc": "Great! We will level you up to deeper topics and richer phrases.",
+  "expAdvancedTitle": "I am advanced",
+  "expAdvancedDesc": "Excellent! We will polish your dialect and bring you to native fluency.",
+
+  "registerTitle": "Create Your Account",
+  "registerSubtitle": "Save your progress and practice with your tutor anytime.",
+  "fullName": "Full Name",
+  "fullNameHint": "Enter your full name",
+  "email": "Email Address",
+  "emailHint": "example@email.com",
+  "password": "Password",
+  "passwordHint": "••••••••",
+  "confirmPassword": "Confirm Password",
+  "confirmPasswordHint": "••••••••",
+  "valNameRequired": "Please enter your name.",
+  "valEmailInvalid": "Please enter a valid email address.",
+  "valPasswordWeak": "Password must be at least 6 characters.",
+  "valPasswordsDoNotMatch": "Passwords do not match.",
+
+  "tutorSelectionTitle": "Who would you like your tutor to be?",
+  "tutorSelectionSubtitle": "Pick the persona you feel most comfortable speaking with.",
+  "tutorAbbasName": "Abbas",
+  "tutorAbbasRole": "AI Language Coach",
+  "tutorAbbasDesc": "A friendly, energetic, and witty AI language tutor who encourages you to speak naturally 😂",
+  "tutorAbbasTrait1": "Energetic",
+  "tutorAbbasTrait2": "Witty",
+  "tutorAbbasTrait3": "Encouraging",
+  "tutorAbbasTrait4": "Playful",
+
+  "tutorDunyaName": "Dunya",
+  "tutorDunyaRole": "AI Language Coach",
+  "tutorDunyaDesc": "A warm, patient, and confident AI language tutor who helps you build conversational confidence.",
+  "tutorDunyaTrait1": "Warm",
+  "tutorDunyaTrait2": "Patient",
+  "tutorDunyaTrait3": "Confident",
+  "tutorDunyaTrait4": "Encouraging",
+
+  "completionTitle": "You're All Set! 🚀",
+  "completionSubtitle": "From now on, we will build your learning journey based on your level and goals.",
+  "letsStart": "Let's Get Started",
+
+  "placementIntroTitle": "Let's see where to start 🎯",
+  "placementIntroDesc1": "This isn't a school exam, and there is no pass or fail. We just want to find your starting point so we don't waste your time on things that are too easy.",
+  "placementIntroDesc2": "Answer as much as you can, and if you don't know, that's completely fine.",
+  "placementIntroCta": "Let's Begin",
+  "placementIntroAbbas": "I'm Abbas, and I'll walk with you step by step. If you don't know an answer, it's not the end of the world 😂",
+  "placementIntroDunya": "I'm Dunya, and in just a few minutes we'll find the best starting point for you.",
+
+  "tutorCallTitle": "Live Tutor Conversation",
+  "tapToSpeak": "Tap to Speak",
+  "listeningPrompt": "Listening to you... Speak freely",
+  "processingPrompt": "Understanding what you said...",
+  "speakingPrompt": "Tutor is speaking...",
+  "stopSpeaking": "Stop Speaking",
+  "retryVoice": "Try Again",
+  "typeInstead": "Type instead",
+  "micPermissionDenied": "Microphone permission is required to practice speaking.",
+  "sttUnavailable": "Speech recognition is not available on this device.",
+  "ttsUnavailable": "Audio speech playback is not available.",
+  "grantPermission": "Grant Permission",
+  "tutorGreetingAbbas": "Hey! Ready to practice real speaking? Tap the mic whenever you're ready! 🔥",
+  "tutorGreetingDunya": "Hello! I'm so excited to practice with you. Tap the mic whenever you're ready! 🌟",
+
+  "questionProgress": "Question {current} of {total}",
+  "@questionProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "answerSubmit": "Submit",
+  "answerDontKnow": "I don't know",
+  "answerHint": "Hint",
+  "answerInputHint": "Type your answer here...",
+
+  "evalFeedbackStrong": "Awesome 👏 Let's level up slightly.",
+  "evalFeedbackPartial": "Very close! I understood you, just one small detail.",
+  "evalFeedbackWeak": "No worries, let's try something simpler.",
+  "evalFeedbackSkipped": "Totally fine. This helps me understand where we should start.",
+  "evalErrorRetry": "A glitch occurred while evaluating your response. Please try again.",
+
+  "placementResultTitle": "We found your starting point! 🎯",
+  "placementResultSubtitle": "Estimated Level",
+  "placementResultDisclaimer": "This is an initial estimate, and we'll fine-tune your level as you speak and learn with us.",
+  "placementSkillComprehension": "Comprehension",
+  "placementSkillVocabulary": "Vocabulary",
+  "placementSkillGrammar": "Grammar & Structure",
+  "placementSkillCommunication": "General Communication",
+  "pronunciationNotice": "Pronunciation: We'll evaluate it during our first voice call 🎙️",
+  "strengthsTitle": "Your Strongest Areas",
+  "weaknessesTitle": "We'll Focus More On",
+  "continueJourney": "Continue My Journey",
+
+  "cefrPreA1": "Starting from Scratch",
+  "cefrA1": "Beginner",
+  "cefrA2": "Strong Basics",
+  "cefrB1": "Intermediate",
+  "cefrB2": "Upper Intermediate",
+  "cefrC1": "Advanced",
+  "cefrC2": "Mastery",
+
+  "progressTitle": "Progress & Achievements",
+  "currentStreak": "Daily Streak",
+  "streakDaysCount": "{count} Days",
+  "@streakDaysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "streakDaySingle": "1 Day",
+  "totalXp": "Total XP",
+  "xpPoints": "{xp} XP",
+  "@xpPoints": {
+    "placeholders": {
+      "xp": { "type": "int" }
+    }
+  },
+  "learnerLevel": "Level {level}: {title}",
+  "@learnerLevel": {
+    "placeholders": {
+      "level": { "type": "int" },
+      "title": { "type": "String" }
+    }
+  },
+  "todayProgress": "Today's Progress",
+  "dailyGoal": "Daily Goal",
+  "dailyGoalMet": "Awesome! You reached today's goal 🎯",
+  "dailyGoalRemaining": "{xp} XP remaining to reach today's goal",
+  "@dailyGoalRemaining": {
+    "placeholders": {
+      "xp": { "type": "int" }
+    }
+  },
+  "skillsBreakdown": "Skills Breakdown",
+  "learningRoadmap": "3-Month Learning Roadmap",
+  "month1Title": "Month 1: Foundation",
+  "month2Title": "Month 2: Real Life",
+  "month3Title": "Month 3: Fluency",
+  "achievementsTitle": "Achievements & Badges",
+  "unlockedAchievements": "{unlocked} of {total} Unlocked",
+  "@unlockedAchievements": {
+    "placeholders": {
+      "unlocked": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "weeklySummary": "Weekly Summary",
+  "activeDaysThisWeek": "{count} of 7 active days this week",
+  "@activeDaysThisWeek": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "insufficientEvidence": "Insufficient data yet",
+  "assessedAttempts": "{count} assessments",
+  "@assessedAttempts": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "unlockedOn": "Unlocked on {date}",
+  "@unlockedOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "inProgress": "In Progress",
+  "startRecommendedAction": "Start Recommended Activity",
+  "viewFullProgress": "View Full Progress",
+  "streakLongest": "Longest Streak: {days} days",
+  "@streakLongest": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "totalLearningDays": "Total Learning Days: {days} days",
+  "@totalLearningDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+
+  "accountTypeTitle": "Account Type",
+  "accountTypeSubtitle": "Choose how you would like to use Lahjti",
+  "accountIndividual": "Individual Learner",
+  "accountIndividualDesc": "Self-paced personalized learning with AI Tutor",
+  "accountSchool": "School / Institution",
+  "accountSchoolDesc": "Account linked to your school or classroom",
+
+  "schoolRoleTitle": "What is your role?",
+  "schoolRoleSubtitle": "Select your role to continue",
+  "roleStudent": "Student",
+  "roleStudentDesc": "Join your class, complete exercises, and speak with AI Tutor",
+  "roleTeacher": "Teacher",
+  "roleTeacherDesc": "Manage your classes, students, and learning plans",
+
+  "schoolCodeLabel": "School Code",
+  "schoolCodeHint": "e.g. SCH-1001 or LAH-EDU-2026",
+  "schoolCodeVerifyBtn": "Verify Code",
+  "schoolCodeValid": "School verified successfully ✅",
+  "schoolCodeInvalid": "Invalid or inactive school code ❌",
+  "schoolCodeRequired": "Please enter and verify your school code",
+  "schoolNameLabel": "School Name",
+
+  "studentGradeLabel": "Grade Level",
+  "studentGradeHint": "e.g. Grade 5, Grade 10",
+  "studentSectionLabel": "Class / Section",
+  "studentSectionHint": "e.g. Section A, Room 102",
+  "studentInfoTitle": "Classroom Details",
+  "studentInfoSubtitle": "Enter your grade and class section",
+
+  "teacherSubjectLabel": "Subject / Language Taught",
+  "teacherSubjectHint": "e.g. English, Conversational Skills",
+  "teacherGradesLabel": "Grades Taught",
+  "teacherGradesHint": "e.g. Grades 7, 8, 9",
+  "teacherSetupTitle": "Teacher Profile Setup",
+  "teacherSetupSubtitle": "Enter the subject and grades you teach",
+
+  "teacherHomeTitle": "Teacher Hub",
+  "teacherHomeSubtitle": "Welcome, Teacher {name}",
+  "@teacherHomeSubtitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "teacherClassroomsPreview": "Classrooms & Students (Coming in next step)",
+  "teacherCurriculumPreview": "Curriculum & Lesson Plans",
+
+  "subscriptionTitle": "Subscription & Access",
+  "trialActiveBadge": "Free Trial Active",
+  "trialDaysRemainingText": "{days} days remaining in trial",
+  "@trialDaysRemainingText": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "subscriptionPriceNote": "$10/month after trial ends",
+  "schoolAccessBadge": "School Access",
+  "schoolAccessDesc": "Your account is active via {schoolName}",
+  "@schoolAccessDesc": {
+    "placeholders": {
+      "schoolName": { "type": "String" }
+    }
+  },
+  "welcomeSchoolButton": "🏫 School Portal (Student / Teacher)",
+
+  "teacherDashboardTitle": "Teacher Dashboard",
+  "myClassesTitle": "My Classes",
+  "totalStudentsLabel": "Total Students",
+  "activeTodayLabel": "Active Today",
+  "tasksCompletedTodayLabel": "Completed Today's Tasks",
+  "averageProgressLabel": "Average Progress",
+  "notEnoughDataYet": "Not enough data yet",
+  "noClassesAssigned": "No classes assigned yet",
+  "noStudentsInClass": "No students have joined this class yet.",
+  "classStudentsTitle": "Class Students",
+  "studentProgressTitle": "Student Educational Progress",
+  "learningOverviewTitle": "Learning Overview",
+  "cefrLevelLabel": "Language Level (CEFR)",
+  "lessonsCompletedLabel": "Lessons Completed",
+  "vocabularyMasteredLabel": "Vocabulary Mastered",
+  "examsCompletedLabel": "Exams Completed",
+  "totalMinutesLearnedLabel": "Learning Minutes",
+  "skillProgressTitle": "Skill Progress",
+  "recentActivityTitle": "Recent Activity",
+  "needsAttentionTitle": "Needs Attention",
+  "noAttentionNeeded": "No warnings. The student is progressing well 👏",
+  "studentCountLabel": "{count} students",
+  "@studentCountLabel": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tasksCompletedStatus": "Completed today's tasks ✅",
+  "tasksPendingStatus": "Tasks pending for today ⏳",
+  "viewDetailsBtn": "View Details",
+  "evidenceSufficientBadge": "Verified Evidence",
+  "evidenceInsufficientBadge": "Preliminary Data",
+  "privacyProtectionNotice": "🔒 Showing educational performance metrics only for privacy protection",
+  "studentListEmpty": "No students in this class currently",
+
+  "studentSchoolHomeTitle": "Learning Home",
+  "studentGreeting": "Hello {name} 👋",
+  "@studentGreeting": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "whatToDoToday": "What to do today?",
+  "todayTaskMission": "Today's Mission",
+  "todayTaskMissionSub": "Complete {count} activities to earn {xp} XP",
+  "@todayTaskMissionSub": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "xp": { "type": "int" }
+    }
+  },
+  "todayTasksTitle": "Today's Tasks",
+  "noTasksToday": "No tasks left for today, great job! 🎉",
+  "continueLesson": "Continue Lessons",
+  "vocabularyReview": "Vocabulary Review",
+  "educationalGames": "Educational Games",
+  "talkToTutors": "Talk to Abbas & Dunya",
+  "childModeBanner": "Kids Interactive Mode 🎈",
+  "gamesHubTitle": "Educational Games",
+  "gamesHubSubtitle": "Play, learn, and earn XP!",
+  "wordMatchTitle": "Word Match",
+  "listenAndChooseTitle": "Listen & Choose",
+  "sentenceBuilderTitle": "Sentence Builder",
+  "memoryVocabTitle": "Memory Vocabulary",
+  "quickQuizTitle": "Quick Quiz",
+  "playNow": "Play Now",
+  "taskCompleted": "Completed",
+  "taskPending": "Start Now",
+  "gameGreatJob": "Great job! 🌟",
+  "gameTryAgain": "Try again 💪",
+  "gameOverTitle": "Challenge Completed! 🎉",
+  "earnedXpMessage": "You earned {xp} XP",
+  "@earnedXpMessage": {
+    "placeholders": {
+      "xp": { "type": "int" }
+    }
+  },
+  "scoreResult": "Score: {score}%",
+  "@scoreResult": {
+    "placeholders": {
+      "score": { "type": "int" }
+    }
+  },
+  "backToTasks": "Back to Daily Tasks",
+  "checkAnswer": "Check Answer",
+  "tapToMatch": "Tap a word to match",
+  "arrangeSentence": "Arrange the words to make a sentence",
+  "safeAiNotice": "🛡️ Safe, educational AI chat with strict privacy",
+  "trialExpiredBadge": "Trial Expired",
+  "trialExpiredDesc": "Your 3-day free individual learning trial has ended.",
+  "subscriptionPriceTag": "10 USD / month",
+  "subscriptionFeaturesTitle": "What's included in full Lahjti?",
+  "subscriptionFeature1": "Unlimited voice conversations with Abbas & Dunya",
+  "subscriptionFeature2": "Interactive dialect curriculum, games & vocabulary",
+  "subscriptionFeature3": "Smart pronunciation analysis & daily progress tracking",
+  "subscriptionComingSoonBtn": "Subscriptions Coming Soon (No charges applied)",
+  "schoolTrialBadge": "Educational School Trial (10 Days)",
+  "schoolTrialDesc": "Your account is activated through your school for 10 free educational days",
+  "developerCredit": "Developed by: Mohammad Abu Abbas • Phoenix Technical Group (PTG)",
+  "termsOfService": "Terms of Service",
+  "privacyPolicy": "Privacy Policy",
+  "restorePurchases": "Restore Purchases",
+  "restorePurchasesDevNotice": "Restore purchases will be available with official payment integrations",
+  "activeSubscriptionBadge": "Active Individual Subscription",
+  "activeSubscriptionDesc": "$10/month • Full access to all Lahjti features",
+  "pastDueBadge": "Payment Past Due",
+  "cancelledGraceBadge": "Auto-Renewal Cancelled",
+  "accountProfileTitle": "Account & Subscription",
+  "accountAccessStatusLabel": "Access Status",
+  "accountTypeLabel": "Account Context",
+  "schoolAccessActive": "School Access Active",
+  "trialEndedSubscriptionRequired": "Trial ended • Subscription required to continue",
+  "trialActiveDaysRemaining": "Trial active • {days} days remaining",
+  "@trialActiveDaysRemaining": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "continueLearningCta": "Continue Learning ➔",
+  "todaysTasksHeader": "Today's Learning Tasks",
+  "todaysTasksHeaderSub": "Complete tasks to achieve your daily learning goal",
+  "dueVocabCountLabel": "{count} words due for review",
+  "@dueVocabCountLabel": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reviewVocabAction": "Start Vocabulary Review ({minutes}m)",
+  "@reviewVocabAction": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "finishLessonBtn": "Complete Lesson (+30 XP) 🎉",
+  "emptyTasksCelebration": "Great job! You finished all tasks for today 🎉",
+  "firstDayStartLesson": "Start your first lesson today 🚀",
+  "allTasksCompletedEnrichment": "You finished all daily goals! Enjoy an open chat with your AI tutor."
+}
