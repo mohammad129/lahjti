@@ -27,3 +27,12 @@ export const tutorRateLimiter = rateLimit({
     return req.user?.userId || req.ip || 'anonymous';
   },
 });
+
+export const adminRateLimiter = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  max: Math.min(config.RATE_LIMIT_MAX_REQUESTS, 20),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, _res, next) => next(new RateLimitError()),
+  keyGenerator: (req) => req.user?.userId || req.ip || 'anonymous',
+});

@@ -285,7 +285,7 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
 
     await _ttsService.speak(
       text: message.text,
-      languageCode: state.targetLanguageCode,
+      languageCode: message.conversationLanguage ?? state.targetLanguageCode,
       audioBase64: message.audioBase64,
       tutorPersona: state.tutor.id,
       onComplete: () {

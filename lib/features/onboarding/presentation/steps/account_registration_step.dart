@@ -69,7 +69,7 @@ class _AccountRegistrationStepState
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.length < 6) {
+    if (value == null || value.length < 12) {
       return context.l10n.valPasswordWeak;
     }
     return null;

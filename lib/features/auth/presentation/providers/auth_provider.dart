@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/repositories/mock_auth_repository.dart';
+import '../../../../core/network/api_client.dart';
+import '../../data/repositories/remote_auth_repository.dart';
 import '../../domain/models/auth_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 /// Provider for the abstract [AuthRepository].
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final repository = MockAuthRepository();
+  final repository = RemoteAuthRepository(ref.watch(apiClientProvider));
   ref.onDispose(() => repository.dispose());
   return repository;
 });

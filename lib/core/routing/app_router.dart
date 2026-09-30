@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/account/presentation/screens/subscription_access_screen.dart';
+import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/exams/presentation/screens/exam_result_screen.dart';
 import '../../features/exams/presentation/screens/exam_session_screen.dart';
 import '../../features/exams/presentation/screens/exams_hub_screen.dart';
@@ -31,6 +32,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.root,
         redirect: (context, state) => AppRoutes.welcome,
+      ),
+      GoRoute(
+        path: AppRoutes.admin,
+        name: 'admin',
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
       GoRoute(
         path: AppRoutes.welcome,

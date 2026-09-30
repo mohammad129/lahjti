@@ -122,7 +122,19 @@ class PlatformTextToSpeechService implements TextToSpeechService {
   }
 
   String _mapLanguageToTtsCode(String code) {
-    switch (code.toLowerCase()) {
+    final normalized = code.toLowerCase();
+    if (normalized.startsWith('ar')) return 'ar';
+    if (normalized.startsWith('en')) return 'en-US';
+    if (normalized.startsWith('es')) return 'es-ES';
+    if (normalized.startsWith('fr')) return 'fr-FR';
+    if (normalized.startsWith('de')) return 'de-DE';
+    if (normalized.startsWith('it')) return 'it-IT';
+    if (normalized.startsWith('tr')) return 'tr-TR';
+    if (normalized.startsWith('ja')) return 'ja-JP';
+    if (normalized.startsWith('zh')) return 'zh-CN';
+    if (normalized.startsWith('ko')) return 'ko-KR';
+
+    switch (normalized) {
       case 'es':
         return 'es-ES';
       case 'fr':

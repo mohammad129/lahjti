@@ -27,6 +27,7 @@ class VoiceMessage {
   final String? nextDifficulty;
   final String? audioBase64;
   final String? voiceProvider;
+  final String? conversationLanguage;
   final DateTime timestamp;
 
   const VoiceMessage({
@@ -41,6 +42,7 @@ class VoiceMessage {
     this.nextDifficulty,
     this.audioBase64,
     this.voiceProvider,
+    this.conversationLanguage,
     required this.timestamp,
   });
 
@@ -65,6 +67,7 @@ class VoiceMessage {
       nextDifficulty: json['nextDifficulty'] as String?,
       audioBase64: json['audioBase64'] as String?,
       voiceProvider: json['voiceProvider'] as String?,
+      conversationLanguage: json['conversationLanguage'] as String?,
       timestamp: timestamp ?? DateTime.now(),
     );
   }
@@ -82,6 +85,7 @@ class VoiceMessage {
       'nextDifficulty': nextDifficulty,
       'audioBase64': audioBase64,
       'voiceProvider': voiceProvider,
+      'conversationLanguage': conversationLanguage,
       'timestamp': timestamp.toIso8601String(),
     };
   }

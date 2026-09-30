@@ -59,6 +59,22 @@ export class TutorConversationService {
     this.provider = newProvider;
   }
 
+  private resolveConversationLanguage(message: string, targetLanguage: string): string {
+    const arabicLetters = (message.match(/[\u0600-\u06ff]/g) ?? []).length;
+    const latinLetters = (message.match(/[A-Za-z]/g) ?? []).length;
+    // Arabic wins ties: short Arabic greetings should never be sent to an
+    // English voice merely because punctuation or numbers are present.
+    if (arabicLetters > 0 && arabicLetters >= latinLetters) return 'ar-SA';
+    if (latinLetters > 0) return 'en-US';
+    const normalized = targetLanguage.toLowerCase();
+    const codes: Record<string, string> = {
+      spanish: 'es-ES', french: 'fr-FR', german: 'de-DE', italian: 'it-IT',
+      turkish: 'tr-TR', japanese: 'ja-JP', chinese: 'zh-CN', korean: 'ko-KR',
+      arabic: 'ar-SA', jordanian: 'ar-JO',
+    };
+    return codes[normalized] ?? 'en-US';
+  }
+
   async converse(
     request: TutorConversationRequest,
     context: EvaluationContext,
@@ -147,6 +163,10 @@ export class TutorConversationService {
       }
 
       const outputData = parsed.data;
+      outputData.conversationLanguage = this.resolveConversationLanguage(
+        request.userMessage,
+        request.targetLanguage
+      );
 
       // Optional ElevenLabs Voice Synthesis
       if (request.synthesizeVoice && outputData.tutorResponse) {
@@ -154,7 +174,7 @@ export class TutorConversationService {
           const ttsResult = await ttsService.synthesizeSpeech({
             text: outputData.tutorResponse,
             tutorPersona: request.tutorPersona,
-            targetLanguage: request.targetLanguage,
+            targetLanguage: outputData.conversationLanguage,
             userId,
           });
           outputData.audioBase64 = ttsResult.audioBase64;

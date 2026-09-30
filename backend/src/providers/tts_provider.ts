@@ -72,7 +72,11 @@ export class ElevenLabsTtsProvider implements ITtsProvider {
       return options.voiceId;
     }
     const persona = options.tutorPersona?.toLowerCase() || 'abbas';
-    return persona === 'dunya' ? this.dunyaVoiceId : this.abbasVoiceId;
+    const voiceId = persona === 'dunya' ? this.dunyaVoiceId : this.abbasVoiceId;
+    if (!voiceId.trim()) {
+      throw new Error(`ELEVENLABS_VOICE_ID_${persona === 'dunya' ? 'DUNYA' : 'ABBAS'} is not configured on the backend server`);
+    }
+    return voiceId;
   }
 
   private createCacheKey(text: string, voiceId: string, modelId: string): string {
@@ -134,6 +138,7 @@ export class ElevenLabsTtsProvider implements ITtsProvider {
         Accept: 'audio/mpeg',
       },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15_000),
     });
 
     if (!response.ok) {

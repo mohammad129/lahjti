@@ -16,6 +16,8 @@ import { createStudentRouter } from './routes/student_routes.js';
 import { createSubscriptionRouter } from './routes/subscription_routes.js';
 import { createTeacherRouter } from './routes/teacher_routes.js';
 import { createTutorRouter } from './routes/tutor_routes.js';
+import { createAdminRouter } from './routes/admin_routes.js';
+import { createAuthRouter } from './routes/auth_routes.js';
 
 export function createApp(
   placementController?: PlacementController,
@@ -57,15 +59,16 @@ export function createApp(
 
   // 3. API Routes
   app.use('/api/v1/placement', createPlacementRouter(placementController));
+  app.use('/api/v1/auth', createAuthRouter());
   app.use('/api/v1/tutor', createTutorRouter(tutorController));
   app.use('/api/v1/learning', createLearningRouter(learningController));
   app.use('/api/v1/student', createStudentRouter(studentController));
   app.use('/api/v1/teacher', createTeacherRouter(teacherController));
   app.use('/api/v1/subscription', createSubscriptionRouter(subscriptionController));
+  app.use('/api/v1/admin', createAdminRouter());
 
   // 4. Global Error Handler
   app.use(errorHandler);
 
   return app;
 }
-

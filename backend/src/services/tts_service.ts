@@ -12,7 +12,6 @@ import { usageMeteringService } from './usage_metering_service.js';
 
 export class TtsService {
   private provider: ITtsProvider;
-  private fallbackProvider: ITtsProvider = new MockTtsProvider();
 
   constructor(customProvider?: ITtsProvider) {
     if (customProvider) {
@@ -85,7 +84,10 @@ export class TtsService {
       });
 
       console.warn(`⚠️ Upstream TTS synthesis error: ${err?.message}. Delegating to resilient fallback.`);
-      result = await this.fallbackProvider.synthesize(options);
+      throw new AiServiceUnavailableError(
+        'Voice provider is temporarily unavailable',
+        'خدمة الصوت غير متاحة حالياً، لكن يمكنك قراءة الرد أو المحاولة لاحقاً.'
+      );
     }
 
     // 3. Record voice usage if not cached

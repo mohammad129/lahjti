@@ -60,8 +60,6 @@ final apiClientProvider = Provider<ApiClient>((ref) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer dev_pilot_token_2026',
-        'x-user-id': 'pilot_user_android',
       },
     ),
   );
@@ -79,6 +77,15 @@ class ApiClient {
   ApiClient(this._dio);
 
   Dio get dioInstance => _dio;
+
+  /// Installs a runtime-only bearer token. Tokens are never compiled into APKs.
+  void setAuthToken(String? token) {
+    if (token == null || token.isEmpty) {
+      _dio.options.headers.remove('Authorization');
+    } else {
+      _dio.options.headers['Authorization'] = 'Bearer $token';
+    }
+  }
 
   /// Perform a GET request
   Future<Response<T>> get<T>(

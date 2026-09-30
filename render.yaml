@@ -3,7 +3,8 @@ services:
     name: lahjti-backend
     env: node
     rootDir: backend
-    plan: starter
+    # Public-pilot tier: the service can cold-start after inactivity.
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run start
     envVars:
@@ -33,11 +34,18 @@ services:
         sync: false
       - key: ELEVENLABS_API_KEY
         sync: false
+      - key: ELEVENLABS_VOICE_ID_ABBAS
+        sync: false
+      - key: ELEVENLABS_VOICE_ID_DUNYA
+        sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: ADMIN_USER_IDS
+        sync: false
 
 databases:
   - name: lahjti-postgres
-    plan: starter
+    # Render Free Postgres is suitable only for this 30-day public pilot.
+    plan: free
     databaseName: lahjti
     user: lahjti_user

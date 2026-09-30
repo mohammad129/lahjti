@@ -157,7 +157,9 @@ class CompletionStep extends ConsumerWidget {
                 } else if (data.isSchoolStudent) {
                   context.go(AppRoutes.studentHome);
                 } else {
-                  context.go(AppRoutes.home);
+                  // The tutor is the first learning experience for individual
+                  // learners; Home remains available from the tutor app bar.
+                  context.go(AppRoutes.tutor);
                 }
               },
             ),

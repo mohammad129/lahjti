@@ -18,6 +18,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String subscription = '/subscription';
   static const String teacherHome = '/teacher/home';
+  static const String admin = '/admin';
   static const String teacherClassDetails = '/teacher/classes/:classId';
   static const String teacherStudentDetails = '/teacher/students/:studentId';
   static const String studentHome = '/student/home';

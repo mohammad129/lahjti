@@ -27,13 +27,16 @@ const envSchema = z.object({
   DAILY_QUOTA_PAID_REQUESTS: z.string().default('200').transform((val) => parseInt(val, 10)),
   DAILY_QUOTA_SCHOOL_STUDENT_REQUESTS: z.string().default('60').transform((val) => parseInt(val, 10)),
   DAILY_QUOTA_SCHOOL_TEACHER_REQUESTS: z.string().default('500').transform((val) => parseInt(val, 10)),
-  JWT_SECRET: z.string().default('dev_secret_key_lahjti_2026'),
+  JWT_SECRET: z.string().optional().default(''),
+  // Comma-separated bootstrap administrator subject IDs. Keep this server-only.
+  ADMIN_USER_IDS: z.string().optional().default(''),
   DATABASE_URL: z.string().optional().default(''),
   // Step 28: ElevenLabs Production TTS
   ELEVENLABS_API_KEY: z.string().optional().default(''),
   ELEVENLABS_MODEL_ID: z.string().default('eleven_multilingual_v2'),
-  ELEVENLABS_VOICE_ID_ABBAS: z.string().default('pNInz6obpgDQGcFmaJgB'),
-  ELEVENLABS_VOICE_ID_DUNYA: z.string().default('21m00Tcm4TlvDq8ikWAM'),
+  // Voice IDs belong to the account owner and must be configured explicitly.
+  ELEVENLABS_VOICE_ID_ABBAS: z.string().optional().default(''),
+  ELEVENLABS_VOICE_ID_DUNYA: z.string().optional().default(''),
   TTS_PROVIDER: z.enum(['mock', 'elevenlabs', 'disabled']).default('elevenlabs'),
   TTS_CACHE_MAX_ENTRIES: z.string().default('200').transform((val) => parseInt(val, 10)),
   TTS_MAX_INPUT_CHARS: z.string().default('500').transform((val) => parseInt(val, 10)),
@@ -47,3 +50,7 @@ if (!parsedEnv.success) {
 }
 
 export const config = parsedEnv.data;
+
+if (config.NODE_ENV === 'production' && !config.JWT_SECRET) {
+  throw new Error('JWT_SECRET must be configured in production');
+}

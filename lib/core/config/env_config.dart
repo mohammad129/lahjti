@@ -37,13 +37,15 @@ class EnvConfig {
 
   /// Current application environment
   static final AppEnvironment environment = AppEnvironment.fromString(
-    const String.fromEnvironment('APP_ENV', defaultValue: 'dev'),
+    // A release APK must never silently point at a private LAN address. Local
+    // development remains available explicitly through --dart-define=APP_ENV=dev.
+    const String.fromEnvironment('APP_ENV', defaultValue: 'pilot'),
   );
 
-  /// Configurable Host for local development (defaults to PC LAN IP: 192.168.1.18)
+  /// Configurable host used only when APP_ENV=dev.
   static const String devHost = String.fromEnvironment(
     'BACKEND_HOST',
-    defaultValue: '192.168.1.18',
+    defaultValue: '',
   );
 
   /// Configurable Port for local development
@@ -61,6 +63,11 @@ class EnvConfig {
 
     switch (environment) {
       case AppEnvironment.dev:
+        if (devHost.isEmpty) {
+          throw StateError(
+            'Development requires API_BASE_URL or BACKEND_HOST via --dart-define.',
+          );
+        }
         return 'http://$devHost:$devPort/api/v1';
       case AppEnvironment.pilot:
         const pilotUrl = String.fromEnvironment(

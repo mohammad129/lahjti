@@ -77,6 +77,7 @@ export const AiTutorConversationOutputSchema = z.object({
   // Step 28 TTS Audio Payload
   audioBase64: z.string().nullable().optional(),
   voiceProvider: z.string().nullable().optional(),
+  conversationLanguage: z.string().min(2).max(30).optional(),
 });
 
 export const TtsSynthesizeRequestSchema = z.object({
