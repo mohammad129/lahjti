@@ -108,7 +108,7 @@
   "confirmPasswordHint": "••••••••",
   "valNameRequired": "اكتب اسمك أولاً.",
   "valEmailInvalid": "تأكد من البريد الإلكتروني.",
-  "valPasswordWeak": "كلمة المرور لازم تكون أقوى (6 خانات على الأقل).",
+  "valPasswordWeak": "كلمة المرور لازم تكون 8 خانات على الأقل.",
   "valPasswordsDoNotMatch": "كلمتا المرور غير متطابقتين.",
 
   "tutorSelectionTitle": "مين بدك يكون مدربك؟",

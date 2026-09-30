@@ -108,7 +108,7 @@
   "confirmPasswordHint": "••••••••",
   "valNameRequired": "Please enter your name.",
   "valEmailInvalid": "Please enter a valid email address.",
-  "valPasswordWeak": "Password must be at least 6 characters.",
+  "valPasswordWeak": "Password must be at least 8 characters.",
   "valPasswordsDoNotMatch": "Passwords do not match.",
 
   "tutorSelectionTitle": "Who would you like your tutor to be?",

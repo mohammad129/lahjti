@@ -168,7 +168,10 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
 
     try {
       await _sttService.startListening(
-        languageCode: state.targetLanguageCode,
+        // Recognition follows the learner's spoken language, not the language
+        // being learned. This makes Arabic speech work for an Arabic learner
+        // practising English, while the backend still detects language per turn.
+        languageCode: _recognitionLanguageCode(),
         onResult: (words, isFinal) {
           state = state.copyWith(currentTranscript: words);
 
@@ -304,6 +307,13 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
   Future<void> stopSpeaking() async {
     await _ttsService.stop();
     state = state.copyWith(status: VoiceSessionStatus.ready);
+  }
+
+  String _recognitionLanguageCode() {
+    final native = _nativeLanguage.toLowerCase();
+    if (native.startsWith('arab')) return 'ar';
+    if (native.startsWith('english') || native == 'en') return 'en';
+    return state.targetLanguageCode;
   }
 
   /// Sends text directly (fallback for typing instead of voice).

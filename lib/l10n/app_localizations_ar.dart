@@ -296,7 +296,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get valEmailInvalid => 'تأكد من البريد الإلكتروني.';
 
   @override
-  String get valPasswordWeak => 'كلمة المرور لازم تكون أقوى (6 خانات على الأقل).';
+  String get valPasswordWeak => 'كلمة المرور لازم تكون 8 خانات على الأقل.';
 
   @override
   String get valPasswordsDoNotMatch => 'كلمتا المرور غير متطابقتين.';

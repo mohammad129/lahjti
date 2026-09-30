@@ -8,11 +8,47 @@ type User = { id: string; email: string; passwordHash: string; role: Role; statu
 const memoryUsers = new Map<string, User>();
 const memorySessions = new Map<string, { userId: string; expiresAt: Date; revoked: boolean }>();
 let pool: pg.Pool | undefined;
+let schemaReady: Promise<void> | undefined;
 
 function database(): pg.Pool | undefined {
   if (!config.DATABASE_URL) return undefined;
   pool ??= new pg.Pool({ connectionString: config.DATABASE_URL });
   return pool;
+}
+
+/**
+ * Auth must remain available even when a legacy, unrelated migration fails.
+ * This deliberately contains only the two tables owned by AuthService and is
+ * idempotent, so every production instance can safely call it before use.
+ */
+async function ensureAuthSchema(db: pg.Pool): Promise<void> {
+  schemaReady ??= (async () => {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id varchar(128) PRIMARY KEY,
+        email varchar(320) NOT NULL UNIQUE,
+        password_hash varchar(512) NOT NULL,
+        role varchar(32) NOT NULL DEFAULT 'student',
+        status varchar(32) NOT NULL DEFAULT 'active',
+        created_at timestamp with time zone NOT NULL DEFAULT now(),
+        updated_at timestamp with time zone NOT NULL DEFAULT now()
+      );
+      CREATE TABLE IF NOT EXISTS auth_sessions (
+        id varchar(128) PRIMARY KEY,
+        user_id varchar(128) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at timestamp with time zone NOT NULL,
+        revoked_at timestamp with time zone,
+        created_at timestamp with time zone NOT NULL DEFAULT now()
+      );
+      CREATE INDEX IF NOT EXISTS auth_sessions_user_idx ON auth_sessions (user_id);
+    `);
+  })();
+  try {
+    await schemaReady;
+  } catch (error) {
+    schemaReady = undefined;
+    throw error;
+  }
 }
 
 function hashPassword(password: string, salt = crypto.randomBytes(16).toString('base64url')): string {
@@ -31,6 +67,7 @@ export class AuthService {
   async isSessionActive(sessionId: string, userId: string): Promise<boolean> {
     const db = database();
     if (db) {
+      await ensureAuthSchema(db);
       const result = await db.query(
         'SELECT 1 FROM auth_sessions WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL AND expires_at > now()',
         [sessionId, userId],
@@ -43,12 +80,13 @@ export class AuthService {
   async register(emailInput: string, password: string, role: Role = 'student') {
     const email = emailInput.trim().toLowerCase();
     if (!/^\S+@\S+\.\S+$/.test(email)) throw new ValidationError('A valid email is required');
-    if (password.length < 12) throw new ValidationError('Password must contain at least 12 characters');
+    if (password.length < 8) throw new ValidationError('Password must contain at least 8 characters');
     const id = `usr_${crypto.randomUUID()}`;
     const user: User = { id, email, passwordHash: hashPassword(password), role, status: 'active' };
     const db = database();
     if (db) {
       try {
+        await ensureAuthSchema(db);
         await db.query('INSERT INTO users (id,email,password_hash,role,status) VALUES ($1,$2,$3,$4,$5)', [id, email, user.passwordHash, role, 'active']);
       } catch (error: any) {
         if (error?.code === '23505') throw new ValidationError('An account already exists for this email');
@@ -68,7 +106,13 @@ export class AuthService {
     const db = database();
     let user: User | undefined;
     if (db) {
-      const result = await db.query('SELECT id,email,password_hash,role,status FROM users WHERE email=$1', [email]);
+      let result: pg.QueryResult;
+      try {
+        await ensureAuthSchema(db);
+        result = await db.query('SELECT id,email,password_hash,role,status FROM users WHERE email=$1', [email]);
+      } catch {
+        throw new AiServiceUnavailableError('Authentication database unavailable');
+      }
       const row = result.rows[0];
       if (row) user = { id: row.id, email: row.email, passwordHash: row.password_hash, role: row.role, status: row.status };
     } else if (config.NODE_ENV !== 'production') user = memoryUsers.get(email);
@@ -78,7 +122,10 @@ export class AuthService {
 
   async logout(sessionId: string): Promise<void> {
     const db = database();
-    if (db) await db.query('UPDATE auth_sessions SET revoked_at=now() WHERE id=$1', [sessionId]);
+    if (db) {
+      await ensureAuthSchema(db);
+      await db.query('UPDATE auth_sessions SET revoked_at=now() WHERE id=$1', [sessionId]);
+    }
     else if (memorySessions.has(sessionId)) memorySessions.get(sessionId)!.revoked = true;
   }
 
@@ -90,7 +137,14 @@ export class AuthService {
     const payload = b64({ iss: 'lahjti', aud: 'lahjti-mobile', sub: user.id, role: user.role, iat: now, exp, jti });
     const signature = crypto.createHmac('sha256', config.JWT_SECRET).update(`${header}.${payload}`).digest('base64url');
     const db = database();
-    if (db) await db.query('INSERT INTO auth_sessions (id,user_id,expires_at) VALUES ($1,$2,to_timestamp($3))', [jti, user.id, exp]);
+    if (db) {
+      try {
+        await ensureAuthSchema(db);
+        await db.query('INSERT INTO auth_sessions (id,user_id,expires_at) VALUES ($1,$2,to_timestamp($3))', [jti, user.id, exp]);
+      } catch {
+        throw new AiServiceUnavailableError('Authentication database unavailable');
+      }
+    }
     else memorySessions.set(jti, { userId: user.id, expiresAt: new Date(exp * 1000), revoked: false });
     return { token: `${header}.${payload}.${signature}`, expiresAt: new Date(exp * 1000).toISOString(), user: { id: user.id, email: user.email, role: user.role } };
   }

@@ -67,7 +67,29 @@ class _AdminOverview extends StatelessWidget {
             crossAxisSpacing: 12,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            children: cards.map((item) => Card(child: Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(item.label), const Spacer(), Text(item.value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold))]))).toList(),
+            children: cards
+                .map(
+                  (item) => Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.label),
+                          const Spacer(),
+                          Text(
+                            item.value,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
           const SizedBox(height: 24),
           const Text('Service configuration', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),

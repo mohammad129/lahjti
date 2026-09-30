@@ -296,7 +296,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get valEmailInvalid => 'Please enter a valid email address.';
 
   @override
-  String get valPasswordWeak => 'Password must be at least 6 characters.';
+  String get valPasswordWeak => 'Password must be at least 8 characters.';
 
   @override
   String get valPasswordsDoNotMatch => 'Passwords do not match.';

@@ -69,7 +69,7 @@ class _AccountRegistrationStepState
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.length < 12) {
+    if (value == null || value.length < 8) {
       return context.l10n.valPasswordWeak;
     }
     return null;
@@ -102,6 +102,14 @@ class _AccountRegistrationStepState
       if (user != null) {
         ref.read(onboardingProvider.notifier).setRegisteredUser(user);
         ref.read(onboardingProvider.notifier).nextStep();
+      } else {
+        final error = ref.read(authNotifierProvider).errorMessage;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error ?? 'Could not create the account. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
