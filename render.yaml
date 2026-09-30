@@ -5,7 +5,8 @@ services:
     rootDir: backend
     # Public-pilot tier: the service can cold-start after inactivity.
     plan: free
-    buildCommand: npm install && npm run build
+    # TypeScript needs @types packages from devDependencies at build time.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
