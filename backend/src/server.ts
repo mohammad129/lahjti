@@ -8,7 +8,10 @@ const app = createApp();
 async function startServer() {
   if (config.DATABASE_URL) {
     try {
-      const pool = new pg.Pool({ connectionString: config.DATABASE_URL });
+      const pool = new pg.Pool({
+        connectionString: config.DATABASE_URL,
+        ssl: config.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+      });
       await runMigrations(pool);
       console.log('✅ PostgreSQL database connection and migrations verified.');
     } catch (err: any) {

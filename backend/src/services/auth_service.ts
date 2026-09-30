@@ -12,7 +12,12 @@ let schemaReady: Promise<void> | undefined;
 
 function database(): pg.Pool | undefined {
   if (!config.DATABASE_URL) return undefined;
-  pool ??= new pg.Pool({ connectionString: config.DATABASE_URL });
+  // Render's supplied connection string can route through its TLS endpoint.
+  // Requiring TLS in production works for both the private and external URLs.
+  pool ??= new pg.Pool({
+    connectionString: config.DATABASE_URL,
+    ssl: config.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  });
   return pool;
 }
 
