@@ -56,6 +56,25 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthUser> signInWithStudentCode({
+    required String studentCode,
+    required String pin,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final user = AuthUser(
+      id: 'mock_student_${studentCode.trim().toUpperCase()}',
+      email: '${studentCode.trim().toLowerCase()}@school.lahjti',
+      fullName: 'طالب كود: ${studentCode.trim().toUpperCase()}',
+      createdAt: DateTime.now(),
+    );
+
+    _currentUser = user;
+    _authStateController.add(_currentUser);
+    return user;
+  }
+
+  @override
   Future<void> signOut() async {
     _currentUser = null;
     _authStateController.add(null);

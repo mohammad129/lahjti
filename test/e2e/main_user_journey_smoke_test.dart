@@ -23,6 +23,8 @@ import 'package:lahjti/features/tutor/presentation/providers/voice_session_provi
 import 'package:lahjti/features/tutor/presentation/screens/tutor_conversation_screen.dart';
 import 'package:lahjti/features/vocabulary/presentation/screens/vocabulary_practice_screen.dart';
 import 'package:lahjti/features/vocabulary/presentation/screens/vocabulary_screen.dart';
+import 'package:lahjti/features/learning/domain/models/learner_context.dart';
+import 'package:lahjti/features/tutor/domain/models/student_tutor_session.dart';
 import 'package:lahjti/features/welcome/presentation/welcome_screen.dart';
 import 'package:lahjti/l10n/app_localizations.dart';
 
@@ -38,7 +40,9 @@ class MockSmokeTutorRepo implements TutorConversationRepository {
     String learningGoal = 'conversation',
     String difficulty = 'a1',
     bool isSessionStart = false,
-    dynamic learnerContext,
+    LearnerContext? learnerContext,
+    String? sessionId,
+    int voiceDurationSeconds = 0,
   }) async {
     return VoiceMessage(
       id: 'smoke_tutor_msg_1',
@@ -49,6 +53,15 @@ class MockSmokeTutorRepo implements TutorConversationRepository {
       timestamp: DateTime.now(),
     );
   }
+
+  @override
+  Future<StudentTutorSession?> getStudentSessionStatus() async => null;
+
+  @override
+  Future<StudentTutorSession?> startStudentSession() async => null;
+
+  @override
+  Future<StudentTutorSession?> endStudentSession({String? sessionId}) async => null;
 }
 
 Widget createSmokeScreenApp({

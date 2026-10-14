@@ -78,6 +78,40 @@ export class PlacementEvaluationService {
       request.response = request.response.substring(0, config.AI_MAX_INPUT_CHARS);
     }
 
+    // 2.5 Deterministic Database / Key Check (0 AI Calls / 0 Credits Used)
+    if (request.question.expectedAnswer && !this.customProvider) {
+      const cleanExpected = request.question.expectedAnswer.trim().toLowerCase();
+      const cleanActual = (request.response || '').trim().toLowerCase();
+      const isCorrect = cleanExpected === cleanActual;
+      const score = isCorrect ? 100 : (request.skipped ? 0 : 20);
+
+      await usageMeteringService.recordUsage({
+        userId,
+        feature: 'placement_evaluation',
+        modelUsed: 'database_deterministic',
+        inputTokens: 0,
+        outputTokens: 0,
+        cachedResponsesCount: 1,
+      });
+
+      return {
+        semanticScore: score,
+        grammarScore: isCorrect ? 100 : 30,
+        vocabularyScore: isCorrect ? 100 : 30,
+        comprehensionScore: isCorrect ? 100 : 20,
+        fluencyScore: isCorrect ? 100 : 20,
+        pronunciationScore: null,
+        confidence: 1.0,
+        detectedErrors: [],
+        correctedAnswer: isCorrect ? null : request.question.expectedAnswer,
+        explanationArabic: isCorrect
+          ? 'إجابة صحيحة وممتازة تماماً وفق قاعدة البيانات.'
+          : `الإجابة الصحيحة هي "${request.question.expectedAnswer}". تم تسجيل ذلك للمراجعة.`,
+        wasUnderstandable: isCorrect,
+        difficultyRecommendation: isCorrect ? 'increase' : 'decrease',
+      };
+    }
+
     // 3. Cache check for deterministic questions (only when using standard provider)
     let cacheKey: string | null = null;
     if (!this.customProvider) {

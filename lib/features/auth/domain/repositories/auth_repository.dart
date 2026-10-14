@@ -20,6 +20,12 @@ abstract class AuthRepository {
   /// Signs in an existing user.
   Future<AuthUser> signIn({required String email, required String password});
 
+  /// Signs in a school student using their unique student code (ST-XXXXXX) and PIN.
+  Future<AuthUser> signInWithStudentCode({
+    required String studentCode,
+    required String pin,
+  });
+
   /// Signs out the current session.
   Future<void> signOut();
 }

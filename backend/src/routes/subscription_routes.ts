@@ -22,6 +22,7 @@ export function createSubscriptionRouter(controller?: SubscriptionController): R
   router.get('/entitlements', ctrl.getEntitlements);
   router.post('/check-access', ctrl.checkAccess);
   router.get('/usage', ctrl.getUsageTelemetry);
+  router.get('/cost-breakdown', ctrl.getCostBreakdown);
   router.post('/trial/start', ctrl.startTrial);
 
   // Payment Gateway & Billing

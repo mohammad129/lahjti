@@ -2,11 +2,13 @@ import { NextFunction, Request, Response } from 'express';
 import { getDatabase, ILearningDb } from '../db/index.js';
 import { UnauthorizedError } from '../errors/api_error.js';
 import {
+  StudentSessionActionRequestSchema,
   TtsSynthesizeRequestSchema,
   TutorConversationRequestSchema,
 } from '../schemas/tutor_conversation_schemas.js';
 import { ttsService, TtsService } from '../services/tts_service.js';
 import { TutorConversationService } from '../services/tutor_conversation_service.js';
+import { usageMeteringService } from '../services/usage_metering_service.js';
 
 export class TutorController {
   private service: TutorConversationService;
@@ -98,6 +100,62 @@ export class TutorController {
         userId: user.userId,
       });
 
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getStudentSessionStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const user = req.user;
+      if (!user?.userId) {
+        throw new UnauthorizedError('User authentication is required');
+      }
+
+      const status = await usageMeteringService.getStudentSessionStatus(user.userId);
+      res.status(200).json(status);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  startStudentSession = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const user = req.user;
+      if (!user?.userId) {
+        throw new UnauthorizedError('User authentication is required');
+      }
+
+      const result = await usageMeteringService.startStudentSession(user.userId);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  endStudentSession = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const user = req.user;
+      if (!user?.userId) {
+        throw new UnauthorizedError('User authentication is required');
+      }
+
+      const validated = StudentSessionActionRequestSchema.safeParse(req.body);
+      const sessionId = validated.success ? validated.data.sessionId : undefined;
+      const result = await usageMeteringService.endStudentSession(user.userId, sessionId);
       res.status(200).json(result);
     } catch (err) {
       next(err);

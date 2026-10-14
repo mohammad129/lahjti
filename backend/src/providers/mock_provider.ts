@@ -12,6 +12,7 @@ import {
   EvaluationContext,
   LanguageModelProvider,
 } from './language_model_provider.js';
+import { DynamicBilingualEngine } from '../services/dynamic_bilingual_engine.js';
 
 export class MockLanguageModelProvider implements LanguageModelProvider {
   readonly name = 'mock';
@@ -197,6 +198,11 @@ export class MockLanguageModelProvider implements LanguageModelProvider {
       });
     }
 
+    // Arabic input delegation to DynamicBilingualEngine
+    if (/[\u0600-\u06ff]/.test(trimmed)) {
+      return DynamicBilingualEngine.processTurn(request);
+    }
+
     // 3. Repeated mistake humor escalation
     const hadPastTenseMistakeInHistory = request.recentHistory.some(
       (turn) =>
@@ -346,19 +352,7 @@ export class MockLanguageModelProvider implements LanguageModelProvider {
       });
     }
 
-    // 7. Default natural response
-    return AiTutorConversationOutputSchema.parse({
-      tutorResponse: isAbbas
-        ? "That sounds really interesting! Tell me more about why you like that."
-        : "That's lovely! You are expressing your thoughts very clearly. What else happened?",
-      correctedVersion: null,
-      explanationArabic: isAbbas
-        ? 'كلامك مفهوم وممتاز! كمل واحكيلي تفاصيل أكتر 🔥'
-        : 'ممتاز جدًا! طلاقتك عم تتحسن مع كل جملة 👏',
-      detectedErrors: [],
-      shouldCorrect: false,
-      encouragement: 'استمر، أداء رائع!',
-      nextDifficulty: 'same',
-    });
+    // 7. Dynamic bilingual engine processing (Arabic + English natural conversation & error detection)
+    return DynamicBilingualEngine.processTurn(request);
   }
 }

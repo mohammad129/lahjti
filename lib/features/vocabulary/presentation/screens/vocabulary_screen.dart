@@ -505,6 +505,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
           ElevatedButton(
             onPressed: () => context.push(AppRoutes.tutorConversation),
             style: ElevatedButton.styleFrom(
+              minimumSize: Size.zero,
               backgroundColor: Colors.white,
               foregroundColor:
                   isAbbas ? AppColors.primary : AppColors.secondary,
@@ -657,7 +658,7 @@ class _VocabularyScreenState extends ConsumerState<VocabularyScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          item.phonetic!,
+                          item.phonetic ?? '',
                           style: const TextStyle(
                             fontSize: 11,
                             color: AppColors.textSecondaryLight,

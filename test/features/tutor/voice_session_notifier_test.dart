@@ -5,6 +5,7 @@ import 'package:lahjti/features/onboarding/domain/models/tutor_persona.dart';
 import 'package:lahjti/features/progress/domain/models/xp_models.dart';
 import 'package:lahjti/features/tutor/data/services/mock_speech_to_text_service.dart';
 import 'package:lahjti/features/tutor/data/services/mock_text_to_speech_service.dart';
+import 'package:lahjti/features/tutor/domain/models/student_tutor_session.dart';
 import 'package:lahjti/features/tutor/domain/models/voice_session_state.dart';
 import 'package:lahjti/features/tutor/domain/repositories/tutor_conversation_repository.dart';
 import 'package:lahjti/features/tutor/presentation/providers/voice_session_provider.dart';
@@ -14,6 +15,22 @@ class FakeConversationRepository implements TutorConversationRepository {
   String lastUserText = '';
   bool lastIsSessionStart = false;
   LearnerContext? lastLearnerContext;
+  StudentTutorSession? mockStudentSession;
+
+  @override
+  Future<StudentTutorSession?> getStudentSessionStatus() async {
+    return mockStudentSession;
+  }
+
+  @override
+  Future<StudentTutorSession?> startStudentSession() async {
+    return mockStudentSession;
+  }
+
+  @override
+  Future<StudentTutorSession?> endStudentSession({String? sessionId}) async {
+    return mockStudentSession;
+  }
 
   @override
   Future<VoiceMessage> generateTutorResponse({
@@ -27,6 +44,8 @@ class FakeConversationRepository implements TutorConversationRepository {
     String difficulty = 'a1',
     bool isSessionStart = false,
     LearnerContext? learnerContext,
+    String? sessionId,
+    int voiceDurationSeconds = 0,
   }) async {
     callCount++;
     lastUserText = userText;

@@ -4,6 +4,7 @@ import '../../../learning/data/curriculum/starter_curriculum.dart';
 import '../../../learning/presentation/providers/learning_providers.dart';
 import '../../../onboarding/domain/models/age_group.dart';
 import '../../../onboarding/presentation/providers/onboarding_provider.dart';
+import '../../../tutor/domain/models/student_tutor_session.dart';
 import '../../data/repositories/remote_school_learning_repository.dart';
 import '../../domain/models/daily_task.dart';
 import '../../domain/models/game_models.dart';
@@ -29,6 +30,23 @@ final dailyTaskEngineProvider = Provider<DailyTaskEngine>((ref) {
 /// StateProvider holding the authenticated School Student profile.
 final currentSchoolStudentProfileProvider =
     StateProvider<SchoolStudentProfile?>((ref) => null);
+
+/// StateProvider holding the active School Student AI Tutor daily session quota status.
+final currentStudentTutorSessionProvider =
+    StateProvider<StudentTutorSession?>((ref) {
+  // Default fresh daily quota: 4 sessions, 3600 seconds (1 hour)
+  return const StudentTutorSession(
+    isSchoolStudent: true,
+    maxDailySessions: 4,
+    completedSessionsCount: 0,
+    currentSessionNumber: 1,
+    remainingSessions: 4,
+    maxDailySeconds: 3600,
+    totalSecondsUsedToday: 0,
+    remainingSecondsToday: 3600,
+    canStartOrContinueSession: true,
+  );
+});
 
 /// Provider to determine if the active student is in Child-Friendly Mode (Ages 6–10).
 final isChildModeProvider = Provider<bool>((ref) {

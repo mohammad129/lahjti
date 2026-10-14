@@ -541,6 +541,308 @@ class InMemoryTeacherDashboardRepository implements TeacherDashboardRepository {
     return _studentAttentionMap[studentId] ?? [];
   }
 
+  @override
+  Future<TeacherTutorOversightData> getTutorOversight({
+    required String teacherId,
+    required String schoolCode,
+    String? classId,
+  }) async {
+    final authorizedClasses = _classrooms.values.where((c) {
+      if (!c.active) return false;
+      if (!_isTeacherAuthorized(
+        teacherId: teacherId,
+        schoolCode: schoolCode,
+        classroom: c,
+      )) {
+        return false;
+      }
+      if (classId != null && c.id != classId) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    if (authorizedClasses.isEmpty) {
+      return TeacherTutorOversightData.empty();
+    }
+
+    final now = DateTime.now();
+    final allTutorStudents = <TeacherStudentTutorSummary>[
+      // Student 1: Sami (Grade 6-A) - 3 sessions completed, 42 mins
+      TeacherStudentTutorSummary(
+        studentId: 'stu_sami_01',
+        displayName: 'سامي عبد الله عواد',
+        avatarEmoji: '🎒',
+        classId: 'cls_grade6_a',
+        className: 'الصف السادس - أ',
+        cefrLevel: 'A2',
+        totalSpokenSeconds: 2520, // 42 minutes
+        completedSessionsCount: 3,
+        maxDailySessions: 4,
+        maxDailySeconds: 3600,
+        isDailyLimitReached: false,
+        hasActiveSession: false,
+        sessions: [
+          TeacherTutorSessionSlot(
+            sessionNumber: 1,
+            status: 'completed',
+            durationSeconds: 900,
+            turnsCount: 12,
+            topic: 'روتين الصباح والعادات اليومية',
+            tutorName: 'Abbas',
+            startedAt: now.subtract(const Duration(hours: 4)),
+            endedAt: now.subtract(const Duration(hours: 3, minutes: 45)),
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 2,
+            status: 'completed',
+            durationSeconds: 840,
+            turnsCount: 10,
+            topic: 'المواد المفضلة في المدرسة',
+            tutorName: 'Abbas',
+            startedAt: now.subtract(const Duration(hours: 2, minutes: 30)),
+            endedAt: now.subtract(const Duration(hours: 2, minutes: 16)),
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 3,
+            status: 'completed',
+            durationSeconds: 780,
+            turnsCount: 11,
+            topic: 'طلب وجبة الغداء باللغة الإنجليزية',
+            tutorName: 'Dunya',
+            startedAt: now.subtract(const Duration(minutes: 50)),
+            endedAt: now.subtract(const Duration(minutes: 37)),
+          ),
+          const TeacherTutorSessionSlot(
+            sessionNumber: 4,
+            status: 'not_started',
+            durationSeconds: 0,
+            turnsCount: 0,
+          ),
+        ],
+        recentTopics: const [
+          'روتين الصباح (Morning Routines)',
+          'المواد الدراسية (School Subjects)',
+          'طلب الطعام (Ordering Lunch)',
+        ],
+        teacherNotesSuggestion:
+            'تفاعل الطالب ممتاز وسريع في الإجابة، يحتاج تدريب إضافي على نطق الحروف المركبة (th/ch).',
+      ),
+
+      // Student 2: Layla (Grade 6-A) - 4 of 4 sessions completed! Goal Completed! 55 mins
+      TeacherStudentTutorSummary(
+        studentId: 'stu_layla_02',
+        displayName: 'ليلى طارق خليل',
+        avatarEmoji: '🌟',
+        classId: 'cls_grade6_a',
+        className: 'الصف السادس - أ',
+        cefrLevel: 'B1',
+        totalSpokenSeconds: 3300, // 55 minutes
+        completedSessionsCount: 4,
+        maxDailySessions: 4,
+        maxDailySeconds: 3600,
+        isDailyLimitReached: true,
+        hasActiveSession: false,
+        sessions: [
+          TeacherTutorSessionSlot(
+            sessionNumber: 1,
+            status: 'completed',
+            durationSeconds: 840,
+            turnsCount: 14,
+            topic: 'خطط عطلة نهاية الأسبوع',
+            tutorName: 'Dunya',
+            startedAt: now.subtract(const Duration(hours: 5)),
+            endedAt: now.subtract(const Duration(hours: 4, minutes: 46)),
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 2,
+            status: 'completed',
+            durationSeconds: 900,
+            turnsCount: 16,
+            topic: 'إجراءات السفر بالمطار',
+            tutorName: 'Abbas',
+            startedAt: now.subtract(const Duration(hours: 3)),
+            endedAt: now.subtract(const Duration(hours: 2, minutes: 45)),
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 3,
+            status: 'completed',
+            durationSeconds: 780,
+            turnsCount: 13,
+            topic: 'وصف الفصول وحالة الطقس',
+            tutorName: 'Dunya',
+            startedAt: now.subtract(const Duration(hours: 1, minutes: 30)),
+            endedAt: now.subtract(const Duration(hours: 1, minutes: 17)),
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 4,
+            status: 'completed',
+            durationSeconds: 780,
+            turnsCount: 15,
+            topic: 'رواية قصة قصيرة عن الطبيعة',
+            tutorName: 'Abbas',
+            startedAt: now.subtract(const Duration(minutes: 35)),
+            endedAt: now.subtract(const Duration(minutes: 22)),
+          ),
+        ],
+        recentTopics: const [
+          'عطلة نهاية الأسبوع (Weekend Plans)',
+          'السفر والمطار (Airport & Travel)',
+          'وصف الطقس (Weather & Seasons)',
+          'سرد القصص (Short Storytelling)',
+        ],
+        teacherNotesSuggestion:
+            'إتقان رائع لأزمنة الماضي والمضارع التام مع ثراء واسع في المفردات؛ مستعدة للمستوى المتقدم.',
+      ),
+
+      // Student 3: Youssef (Grade 6-A) - 1 active session in progress (12 mins)
+      TeacherStudentTutorSummary(
+        studentId: 'stu_youssef_03',
+        displayName: 'يوسف رائد المصري',
+        avatarEmoji: '⚡',
+        classId: 'cls_grade6_a',
+        className: 'الصف السادس - أ',
+        cefrLevel: 'A1',
+        totalSpokenSeconds: 720, // 12 minutes
+        completedSessionsCount: 0,
+        maxDailySessions: 4,
+        maxDailySeconds: 3600,
+        isDailyLimitReached: false,
+        hasActiveSession: true,
+        sessions: [
+          TeacherTutorSessionSlot(
+            sessionNumber: 1,
+            status: 'active',
+            durationSeconds: 720,
+            turnsCount: 8,
+            topic: 'تمارين كرة القدم والرياضة',
+            tutorName: 'Abbas',
+            startedAt: now.subtract(const Duration(minutes: 12)),
+          ),
+          const TeacherTutorSessionSlot(
+            sessionNumber: 2,
+            status: 'not_started',
+            durationSeconds: 0,
+            turnsCount: 0,
+          ),
+          const TeacherTutorSessionSlot(
+            sessionNumber: 3,
+            status: 'not_started',
+            durationSeconds: 0,
+            turnsCount: 0,
+          ),
+          const TeacherTutorSessionSlot(
+            sessionNumber: 4,
+            status: 'not_started',
+            durationSeconds: 0,
+            turnsCount: 0,
+          ),
+        ],
+        recentTopics: const [
+          'تمارين كرة القدم والرياضة (Sports & Football)',
+        ],
+        teacherNotesSuggestion:
+            'جلسة محادثة مباشرة ونشطة الآن مع المدرب عباس. يوصى بتشجيعه لإكمال الجلسات اللاحقة.',
+      ),
+
+      // Student 4: Nour (Grade 7-B) - 0 sessions today
+      const TeacherStudentTutorSummary(
+        studentId: 'stu_nour_04',
+        displayName: 'نور الدين الخطيب',
+        avatarEmoji: '🎯',
+        classId: 'cls_grade7_b',
+        className: 'الصف السابع - ب',
+        cefrLevel: 'A2',
+        totalSpokenSeconds: 0,
+        completedSessionsCount: 0,
+        maxDailySessions: 4,
+        maxDailySeconds: 3600,
+        isDailyLimitReached: false,
+        hasActiveSession: false,
+        sessions: [
+          TeacherTutorSessionSlot(
+            sessionNumber: 1,
+            status: 'not_started',
+            durationSeconds: 0,
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 2,
+            status: 'not_started',
+            durationSeconds: 0,
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 3,
+            status: 'not_started',
+            durationSeconds: 0,
+          ),
+          TeacherTutorSessionSlot(
+            sessionNumber: 4,
+            status: 'not_started',
+            durationSeconds: 0,
+          ),
+        ],
+        recentTopics: [],
+        teacherNotesSuggestion:
+            'لم يبدأ جلسات اليوم بعد. يمكن إرسال تذكير لطيف للبدء بالجلسة الأولى بعد الدوام المدرسي.',
+      ),
+    ];
+
+    // Filter students by authorized classes
+    final authorizedClassIds = authorizedClasses.map((c) => c.id).toSet();
+    final matchingStudents =
+        allTutorStudents
+            .where((s) => authorizedClassIds.contains(s.classId))
+            .toList();
+
+    int practicedCount = 0;
+    int completedQuotaCount = 0;
+    int totalSpokenSec = 0;
+    int activeNow = 0;
+
+    for (final s in matchingStudents) {
+      if (s.totalSpokenSeconds > 0 ||
+          s.completedSessionsCount > 0 ||
+          s.hasActiveSession) {
+        practicedCount++;
+      }
+      if (s.isGoalCompleted) {
+        completedQuotaCount++;
+      }
+      if (s.hasActiveSession) {
+        activeNow++;
+      }
+      totalSpokenSec += s.totalSpokenSeconds;
+    }
+
+    final totalMins = (totalSpokenSec / 60).round();
+    final totalHours = double.parse((totalMins / 60.0).toStringAsFixed(1));
+
+    return TeacherTutorOversightData(
+      totalStudents: matchingStudents.length,
+      practicedTodayCount: practicedCount,
+      completedQuotaCount: completedQuotaCount,
+      totalSpokenMinutes: totalMins,
+      totalSpokenHours: totalHours,
+      averageFluencyScore: 86,
+      activeSessionsNow: activeNow,
+      commonGrammarPoints: const [
+        TeacherGrammarPoint(
+          topic: 'أزمنة الماضي البسيط (Past Simple)',
+          occurrences: 6,
+          recommendedAction:
+              'مراجعة الأفعال غير القياسية (Went, Bought, Spoke) في أول 5 دقائق من الحصة.',
+        ),
+        TeacherGrammarPoint(
+          topic: 'أدوات الربط المركبة (Although / However)',
+          occurrences: 4,
+          recommendedAction:
+              'إجراء تحدي تكوين جمل متقابلة على السبورة الصفية.',
+        ),
+      ],
+      students: matchingStudents,
+    );
+  }
+
   // Testing helpers for custom mock data injection
   void addClassroom(Classroom classroom) {
     _classrooms[classroom.id] = classroom;

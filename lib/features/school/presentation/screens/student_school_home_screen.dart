@@ -184,6 +184,16 @@ class StudentSchoolHomeScreen extends ConsumerWidget {
 
                 const SizedBox(height: AppSpacing.md),
 
+                // English AI Tutor Daily Card (1 hour / 4 sessions daily)
+                _buildEnglishTutorDailyCard(
+                  context,
+                  ref: ref,
+                  isChild: isChild,
+                  isArabic: isArabic,
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
                 // 6. Current Lesson Progression Card
                 _buildCurrentLessonCard(
                   context,
@@ -946,9 +956,35 @@ class StudentSchoolHomeScreen extends ConsumerWidget {
                 context,
                 emoji: '🤖',
                 title: l10n.talkToTutors,
-                subtitle: isArabic ? 'محادثة آمنة' : 'Safe Dialogue',
+                subtitle: isArabic ? '4 جلسات • ساعة يومياً' : '4 Sessions • 1h/day',
                 color: const Color(0xFFF59E0B),
                 route: AppRoutes.tutorConversation,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: _buildHubCard(
+                context,
+                emoji: '🎯',
+                title: isArabic ? 'الخطط المنظمة' : 'Organized Plans',
+                subtitle: isArabic ? 'خطة الـ 60 يوماً المكثفة' : '60-Day Intensive',
+                color: const Color(0xFF0F766E),
+                route: AppRoutes.plans,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildHubCard(
+                context,
+                emoji: '🧠',
+                title: isArabic ? 'بنك أخطائي' : 'Smart Mistakes',
+                subtitle: isArabic ? 'تكرار متباعد ذكي' : 'Spaced Repetition',
+                color: const Color(0xFF312E81),
+                route: AppRoutes.studentMistakes,
               ),
             ),
           ],
@@ -1143,6 +1179,331 @@ class StudentSchoolHomeScreen extends ConsumerWidget {
                 color: AppColors.textPrimaryLight,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnglishTutorDailyCard(
+    BuildContext context, {
+    required WidgetRef ref,
+    required bool isChild,
+    required bool isArabic,
+  }) {
+    final tutorSession = ref.watch(currentStudentTutorSessionProvider);
+
+    final completedCount = tutorSession?.completedSessionsCount ?? 0;
+    final maxSessions = tutorSession?.maxDailySessions ?? 4;
+    final currentSessionNum =
+        tutorSession?.currentSessionNumber ?? (completedCount + 1).clamp(1, 4);
+    final remainingMinsText =
+        tutorSession?.remainingMinutesText(isArabic) ??
+        (isArabic ? '60 دقيقة' : '60 min');
+    final isLimitReached = tutorSession?.isDailyLimitReached ?? false;
+    final hasActiveSession = tutorSession?.activeSessionId != null;
+    final progressFraction =
+        (tutorSession?.dailyUsedFraction ?? 0.0).clamp(0.0, 1.0);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius:
+            isChild ? BorderRadius.circular(20) : AppSpacing.borderRadiusLg,
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text('🎙️', style: TextStyle(fontSize: 22)),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            isArabic
+                                ? 'محادثة الإنجليزية مع المدرب'
+                                : 'English Speaking AI Tutor',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimaryLight,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFFCD34D)),
+                          ),
+                          child: Text(
+                            isArabic ? 'ساعة / 4 جلسات' : '1h / 4 sessions',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isArabic
+                          ? 'تحدث بالإنجليزية مع عباس أو دنيا (ساعة يومياً مقسمة لـ 4 جلسات)'
+                          : 'Practice English with Abbas & Dunya (1 hr daily across 4 sessions)',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondaryLight,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // 4 Session Visual Indicators
+          Row(
+            children: List.generate(maxSessions, (index) {
+              final sessionNum = index + 1;
+              final isDone = sessionNum <= completedCount;
+              final isActive =
+                  sessionNum == currentSessionNum &&
+                  !isLimitReached &&
+                  hasActiveSession;
+              final isNext =
+                  sessionNum == currentSessionNum &&
+                  !isLimitReached &&
+                  !hasActiveSession;
+
+              Color bg;
+              Color border;
+              Widget icon;
+
+              if (isDone) {
+                bg = const Color(0xFF10B981).withValues(alpha: 0.15);
+                border = const Color(0xFF10B981);
+                icon = const Icon(
+                  Icons.check_rounded,
+                  size: 12,
+                  color: Color(0xFF10B981),
+                );
+              } else if (isActive) {
+                bg = const Color(0xFFF59E0B).withValues(alpha: 0.2);
+                border = const Color(0xFFF59E0B);
+                icon = const Text(
+                  '●',
+                  style: TextStyle(fontSize: 10, color: Color(0xFFF59E0B)),
+                );
+              } else if (isNext) {
+                bg = const Color(0xFF3B82F6).withValues(alpha: 0.1);
+                border = const Color(0xFF3B82F6);
+                icon = Text(
+                  '$sessionNum',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF3B82F6),
+                  ),
+                );
+              } else {
+                bg = AppColors.borderLight.withValues(alpha: 0.3);
+                border = AppColors.borderLight;
+                icon = Text(
+                  '$sessionNum',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textTertiaryLight,
+                  ),
+                );
+              }
+
+              return Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: border),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        icon,
+                        const SizedBox(width: 2),
+                        Flexible(
+                          child: Text(
+                            isArabic ? 'جلسة $sessionNum' : 'S$sessionNum',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color:
+                                  isDone
+                                      ? const Color(0xFF065F46)
+                                      : (isActive || isNext
+                                          ? AppColors.textPrimaryLight
+                                          : AppColors.textTertiaryLight),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 12),
+          // Time progress + CTA
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.timer_outlined,
+                          size: 14,
+                          color: AppColors.textSecondaryLight,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            isLimitReached
+                                ? (isArabic
+                                    ? 'أكملت 60 دقيقة اليوم 🎉'
+                                    : 'Completed 60 mins today 🎉')
+                                : (isArabic
+                                    ? 'المتبقي: $remainingMinsText'
+                                    : 'Remaining: $remainingMinsText'),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondaryLight,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 5,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColors.borderLight,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: AlignmentDirectional.centerStart,
+                        widthFactor: progressFraction,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color:
+                                isLimitReached
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFFF59E0B),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  key: const Key('start_student_ai_tutor_btn'),
+                  onTap: () => context.push(AppRoutes.tutorConversation),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Ink(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isLimitReached
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFF59E0B),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isLimitReached
+                              ? Icons.check_circle_rounded
+                              : Icons.mic_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isLimitReached
+                              ? (isArabic ? 'مكتمل' : 'Done')
+                              : (isArabic ? 'تحدث الآن' : 'Speak Now'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

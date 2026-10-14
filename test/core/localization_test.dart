@@ -48,7 +48,7 @@ void main() {
         expect(localizations.valEmailInvalid, 'تأكد من البريد الإلكتروني.');
         expect(
           localizations.valPasswordWeak,
-          'كلمة المرور لازم تكون أقوى (6 خانات على الأقل).',
+          'كلمة المرور لازم تكون 8 خانات على الأقل.',
         );
         expect(
           localizations.valPasswordsDoNotMatch,

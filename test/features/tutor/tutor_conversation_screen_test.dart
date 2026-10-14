@@ -7,6 +7,7 @@ import 'package:lahjti/features/onboarding/domain/models/tutor_persona.dart';
 import 'package:lahjti/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:lahjti/features/tutor/data/services/mock_speech_to_text_service.dart';
 import 'package:lahjti/features/tutor/data/services/mock_text_to_speech_service.dart';
+import 'package:lahjti/features/tutor/domain/models/student_tutor_session.dart';
 import 'package:lahjti/features/tutor/domain/models/voice_session_state.dart';
 import 'package:lahjti/features/tutor/domain/repositories/tutor_conversation_repository.dart';
 import 'package:lahjti/features/tutor/presentation/providers/voice_session_provider.dart';
@@ -15,6 +16,15 @@ import 'package:lahjti/features/tutor/presentation/widgets/tutor_avatar_view.dar
 import 'package:lahjti/l10n/app_localizations.dart';
 
 class FakeWidgetRepo implements TutorConversationRepository {
+  @override
+  Future<StudentTutorSession?> getStudentSessionStatus() async => null;
+
+  @override
+  Future<StudentTutorSession?> startStudentSession() async => null;
+
+  @override
+  Future<StudentTutorSession?> endStudentSession({String? sessionId}) async => null;
+
   @override
   Future<VoiceMessage> generateTutorResponse({
     required String userText,
@@ -27,6 +37,8 @@ class FakeWidgetRepo implements TutorConversationRepository {
     String difficulty = 'a1',
     bool isSessionStart = false,
     LearnerContext? learnerContext,
+    String? sessionId,
+    int voiceDurationSeconds = 0,
   }) async {
     return VoiceMessage(
       id: 'm1',

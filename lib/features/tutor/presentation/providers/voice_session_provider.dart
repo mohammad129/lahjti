@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_client.dart';
@@ -10,6 +11,7 @@ import '../../../progress/domain/models/xp_models.dart';
 import '../../data/repositories/remote_tutor_conversation_repository.dart';
 import '../../data/services/hybrid_elevenlabs_tts_service.dart';
 import '../../data/services/platform_speech_to_text_service.dart';
+import '../../domain/models/student_tutor_session.dart';
 import '../../domain/models/voice_session_state.dart';
 import '../../domain/repositories/tutor_conversation_repository.dart';
 import '../../domain/services/speech_to_text_service.dart';
@@ -56,6 +58,7 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
   final String _ageGroup;
   final String _learningGoal;
   final String _difficulty;
+  Timer? _sessionTicker;
 
   VoiceSessionNotifier({
     required SpeechToTextService sttService,
@@ -86,12 +89,103 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
          ),
        );
 
+  void _startSessionTicker() {
+    _sessionTicker?.cancel();
+    _sessionTicker = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final currentSession = state.studentSession;
+      if (currentSession == null || !currentSession.isSchoolStudent) return;
+
+      final updatedElapsed = state.sessionElapsedSeconds + 1;
+      final remaining = (currentSession.remainingSecondsToday - 1).clamp(0, 3600);
+      final updatedSession = currentSession.copyWith(
+        remainingSecondsToday: remaining,
+        activeSessionDurationSeconds:
+            currentSession.activeSessionDurationSeconds + 1,
+        totalSecondsUsedToday: currentSession.totalSecondsUsedToday + 1,
+      );
+
+      if (remaining <= 0) {
+        timer.cancel();
+        state = state.copyWith(
+          sessionElapsedSeconds: updatedElapsed,
+          studentSession: updatedSession,
+          isSessionEnded: true,
+          errorMessage:
+              'أحسنت يا بطل! أنهيت ساعة المحادثة اليومية بالكامل. استرح الآن ونراك غداً لمتابعة التعلّم!',
+        );
+      } else {
+        state = state.copyWith(
+          sessionElapsedSeconds: updatedElapsed,
+          studentSession: updatedSession,
+        );
+      }
+    });
+  }
+
+  /// Concludes current active student session and marks it completed
+  Future<void> endCurrentSession() async {
+    _sessionTicker?.cancel();
+    try {
+      final updated = await _conversationRepository.endStudentSession(
+        sessionId: state.studentSession?.activeSessionId,
+      );
+      if (!mounted) return;
+      state = state.copyWith(
+        studentSession: updated ?? state.studentSession,
+        isSessionEnded: true,
+        status: VoiceSessionStatus.ready,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      state = state.copyWith(isSessionEnded: true);
+    }
+  }
+
+  /// Starts the next session for the school student (up to 4 sessions/day)
+  Future<void> startNextSession() async {
+    try {
+      final newSession = await _conversationRepository.startStudentSession();
+      if (!mounted) return;
+      state = state.copyWith(
+        studentSession: newSession ?? state.studentSession,
+        sessionElapsedSeconds: 0,
+        isSessionEnded: false,
+        status: VoiceSessionStatus.ready,
+        errorMessage: null,
+      );
+      _startSessionTicker();
+    } catch (e) {
+      if (!mounted) return;
+      state = state.copyWith(errorMessage: e.toString());
+    }
+  }
+
   /// Initializes audio engines and dynamically generates the initial welcome greeting.
   Future<void> initializeSession({String? defaultGreeting}) async {
     state = state.copyWith(status: VoiceSessionStatus.requestingPermission);
 
     final sttOk = await _sttService.initialize();
     final ttsOk = await _ttsService.initialize();
+
+    if (!mounted) return;
+
+    // Load school student daily session status if in school context
+    try {
+      final studentStatus =
+          await _conversationRepository.getStudentSessionStatus();
+      if (mounted && studentStatus != null) {
+        state = state.copyWith(studentSession: studentStatus);
+        if (studentStatus.isSchoolStudent && !studentStatus.isDailyLimitReached) {
+          _startSessionTicker();
+        }
+      }
+    } catch (_) {
+      // Non-blocking fallback
+    }
 
     state = state.copyWith(
       status: VoiceSessionStatus.processing,
@@ -112,11 +206,15 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
             difficulty: _difficulty,
             isSessionStart: true,
             learnerContext: _learnerContext,
+            sessionId: state.studentSession?.activeSessionId,
           );
+
+      if (!mounted) return;
 
       state = state.copyWith(
         status: VoiceSessionStatus.ready,
         messages: [openingMessage],
+        studentSession: openingMessage.studentSession ?? state.studentSession,
       );
 
       if (ttsOk) {
@@ -139,6 +237,8 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
         timestamp: DateTime.now(),
       );
 
+      if (!mounted) return;
+
       state = state.copyWith(
         status: VoiceSessionStatus.ready,
         messages: [fallbackMsg],
@@ -159,6 +259,8 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
       await _ttsService.stop();
     }
 
+    if (!mounted) return;
+
     state = state.copyWith(
       status: VoiceSessionStatus.listening,
       currentTranscript: '',
@@ -173,6 +275,7 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
         // practising English, while the backend still detects language per turn.
         languageCode: _recognitionLanguageCode(),
         onResult: (words, isFinal) {
+          if (!mounted) return;
           state = state.copyWith(currentTranscript: words);
 
           if (isFinal && words.trim().isNotEmpty) {
@@ -180,9 +283,11 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
           }
         },
         onSoundLevelChange: (level) {
+          if (!mounted) return;
           state = state.copyWith(soundLevel: level);
         },
         onError: (error) {
+          if (!mounted) return;
           state = state.copyWith(
             status: VoiceSessionStatus.ready,
             errorMessage: error,
@@ -191,6 +296,7 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
         },
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         status: VoiceSessionStatus.ready,
         errorMessage: e.toString(),
@@ -209,6 +315,7 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
     if (transcript.isNotEmpty) {
       await _processFinalTranscript(transcript);
     } else {
+      if (!mounted) return;
       state = state.copyWith(status: VoiceSessionStatus.ready, soundLevel: 0.0);
     }
   }
@@ -243,11 +350,16 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
         difficulty: _difficulty,
         isSessionStart: false,
         learnerContext: _learnerContext,
+        sessionId: state.studentSession?.activeSessionId,
+        voiceDurationSeconds: 15,
       );
+
+      if (!mounted) return;
 
       state = state.copyWith(
         messages: [...state.messages, tutorReply],
         status: VoiceSessionStatus.ready,
+        studentSession: tutorReply.studentSession ?? state.studentSession,
       );
 
       // Record bounded learning activity in repository (anti-farming + streak updates)
@@ -271,6 +383,7 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
       // Play tutor voice response
       await speakTutorMessage(tutorReply);
     } catch (e) {
+      if (!mounted) return;
       final userFriendlyMsg =
           e is AppException
               ? e.message
@@ -292,9 +405,11 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
       audioBase64: message.audioBase64,
       tutorPersona: state.tutor.id,
       onComplete: () {
+        if (!mounted) return;
         state = state.copyWith(status: VoiceSessionStatus.ready);
       },
       onError: (err) {
+        if (!mounted) return;
         state = state.copyWith(
           status: VoiceSessionStatus.ready,
           errorMessage: err,
@@ -303,17 +418,26 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
     );
   }
 
-  /// Stops ongoing TTS speech playback.
+  /// Stops ongoing TTS speech playback (interrupts tutor immediately).
   Future<void> stopSpeaking() async {
     await _ttsService.stop();
+    if (!mounted) return;
     state = state.copyWith(status: VoiceSessionStatus.ready);
   }
 
+  /// Toggles spoken input language between Arabic ('ar') and English ('en')
+  void toggleInputLanguage() {
+    final next = state.inputLanguageCode == 'ar' ? 'en' : 'ar';
+    state = state.copyWith(inputLanguageCode: next);
+  }
+
+  /// Explicitly sets the input spoken language mode ('ar' or 'en')
+  void setInputLanguage(String code) {
+    state = state.copyWith(inputLanguageCode: code);
+  }
+
   String _recognitionLanguageCode() {
-    final native = _nativeLanguage.toLowerCase();
-    if (native.startsWith('arab')) return 'ar';
-    if (native.startsWith('english') || native == 'en') return 'en';
-    return state.targetLanguageCode;
+    return state.inputLanguageCode;
   }
 
   /// Sends text directly (fallback for typing instead of voice).
@@ -325,6 +449,7 @@ class VoiceSessionNotifier extends StateNotifier<VoiceSessionState> {
 
   @override
   void dispose() {
+    _sessionTicker?.cancel();
     _sttService.dispose();
     _ttsService.dispose();
     super.dispose();
@@ -369,3 +494,15 @@ final voiceSessionNotifierProvider = StateNotifierProvider.autoDispose<
     difficulty: difficulty,
   );
 });
+
+/// Lightweight provider for daily student tutor session status (used on Home/Dashboard screens).
+final studentTutorSessionStatusProvider =
+    FutureProvider<StudentTutorSession?>((ref) async {
+  try {
+    final repo = ref.watch(tutorConversationRepositoryProvider);
+    return await repo.getStudentSessionStatus();
+  } catch (_) {
+    return null;
+  }
+});
+

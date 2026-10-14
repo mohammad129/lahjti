@@ -22,5 +22,25 @@ export function createTutorRouter(
     controller.synthesize
   );
 
+  router.get(
+    '/student-session/status',
+    authMiddleware,
+    controller.getStudentSessionStatus
+  );
+
+  router.post(
+    '/student-session/start',
+    authMiddleware,
+    tutorRateLimiter,
+    controller.startStudentSession
+  );
+
+  router.post(
+    '/student-session/end',
+    authMiddleware,
+    tutorRateLimiter,
+    controller.endStudentSession
+  );
+
   return router;
 }

@@ -24,5 +24,18 @@ export function createStudentRouter(controller?: StudentController): Router {
   // 5. School Enrollment / Joining
   router.post('/join', authMiddleware, activeController.joinSchool);
 
+  // 6. Student Exams (Submit answers & auto-grade)
+  router.post('/exams/:examId/submit', authMiddleware, activeController.submitExam);
+
+  // 7. Student Spaced Repetition Mistakes Review
+  router.get('/mistakes/reviews', authMiddleware, activeController.getMistakeReviews);
+  router.post('/mistakes/:contentId/attempt', authMiddleware, activeController.attemptMistakeReview);
+
+  // 8. Points Transactions Audit Ledger
+  router.get('/points/history', authMiddleware, activeController.getPointsHistory);
+
+  // 9. Educational Game Play
+  router.post('/games/:gameId/play', authMiddleware, activeController.playGame);
+
   return router;
 }

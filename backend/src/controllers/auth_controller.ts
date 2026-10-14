@@ -31,4 +31,34 @@ export class AuthController {
       res.status(204).send();
     } catch (error) { next(error); }
   };
+
+  studentCodeLogin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { studentCode, pin } = req.body ?? {};
+      const { getDatabase } = await import('../db/index.js');
+      const { StudentCodeAuthService } = await import('../services/student_code_auth_service.js');
+      const studentAuth = new StudentCodeAuthService(getDatabase());
+      const session = await studentAuth.loginWithStudentCode(String(studentCode ?? ''), String(pin ?? ''));
+      res.status(200).json({ success: true, data: session });
+    } catch (error) { next(error); }
+  };
+
+  generateStudentCode = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { studentId, pin, schoolId, classroomId } = req.body ?? {};
+      const teacherId = req.user?.userId;
+      const { getDatabase } = await import('../db/index.js');
+      const { StudentCodeAuthService } = await import('../services/student_code_auth_service.js');
+      const studentAuth = new StudentCodeAuthService(getDatabase());
+      const result = await studentAuth.generateCodeForStudent({
+        studentId: String(studentId || req.user?.userId || ''),
+        pin: String(pin ?? '1234'),
+        schoolId,
+        classroomId,
+        teacherId,
+      });
+      res.status(201).json({ success: true, data: result });
+    } catch (error) { next(error); }
+  };
 }
+

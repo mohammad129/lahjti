@@ -18,6 +18,7 @@ import { createTeacherRouter } from './routes/teacher_routes.js';
 import { createTutorRouter } from './routes/tutor_routes.js';
 import { createAdminRouter } from './routes/admin_routes.js';
 import { createAuthRouter } from './routes/auth_routes.js';
+import { createPlanRouter } from './routes/plan_routes.js';
 
 export function createApp(
   placementController?: PlacementController,
@@ -66,6 +67,7 @@ export function createApp(
   app.use('/api/v1/teacher', createTeacherRouter(teacherController));
   app.use('/api/v1/subscription', createSubscriptionRouter(subscriptionController));
   app.use('/api/v1/admin', createAdminRouter());
+  app.use('/api/v1/plans', createPlanRouter());
 
   // 4. Global Error Handler
   app.use(errorHandler);

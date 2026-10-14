@@ -59,4 +59,11 @@ abstract class TeacherDashboardRepository {
     required String teacherId,
     required String schoolCode,
   });
+
+  /// Fetches AI English Tutor conversation oversight and 4-session daily progress.
+  Future<TeacherTutorOversightData> getTutorOversight({
+    required String teacherId,
+    required String schoolCode,
+    String? classId,
+  });
 }

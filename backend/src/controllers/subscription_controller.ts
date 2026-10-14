@@ -199,4 +199,18 @@ export class SubscriptionController {
       next(err);
     }
   };
+
+  getCostBreakdown = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userId = req.user?.userId || 'usr_anonymous';
+      const breakdown = await usageMeteringService.getCostBreakdown(userId);
+      res.status(200).json({
+        success: true,
+        data: breakdown,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }
+

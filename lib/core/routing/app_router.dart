@@ -21,6 +21,11 @@ import '../../features/school/presentation/screens/teacher_student_details_scree
 import '../../features/tutor/presentation/screens/tutor_conversation_screen.dart';
 import '../../features/vocabulary/presentation/screens/vocabulary_practice_screen.dart';
 import '../../features/vocabulary/presentation/screens/vocabulary_screen.dart';
+import '../../features/plans/presentation/screens/daily_activity_session_screen.dart';
+import '../../features/plans/presentation/screens/mistakes_review_screen.dart';
+import '../../features/plans/presentation/screens/plans_list_screen.dart';
+import '../../features/plans/presentation/screens/sixty_day_path_screen.dart';
+import '../../features/school/presentation/screens/teacher_exam_builder_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import 'app_routes.dart';
 
@@ -171,6 +176,38 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.subscription,
         name: 'subscription',
         builder: (context, state) => const SubscriptionAccessScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.plans,
+        name: 'plans',
+        builder: (context, state) => const PlansListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.planDetail,
+        name: 'planDetail',
+        builder: (context, state) {
+          final planId = state.pathParameters['planId'] ?? 'plan_60_days_intensive';
+          return SixtyDayPathScreen(planId: planId);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.planSession,
+        name: 'planSession',
+        builder: (context, state) {
+          final planId = state.pathParameters['planId'] ?? 'plan_60_days_intensive';
+          final dayNumber = int.tryParse(state.pathParameters['dayNumber'] ?? '1') ?? 1;
+          return DailyActivitySessionScreen(planId: planId, dayNumber: dayNumber);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.studentMistakes,
+        name: 'studentMistakes',
+        builder: (context, state) => const MistakesReviewScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.teacherExamBuilder,
+        name: 'teacherExamBuilder',
+        builder: (context, state) => const TeacherExamBuilderScreen(),
       ),
     ],
     errorBuilder:

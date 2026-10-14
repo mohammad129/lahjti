@@ -7,6 +7,7 @@ import {
 } from '../providers/language_model_provider.js';
 import { MockLanguageModelProvider } from '../providers/mock_provider.js';
 import { OpenAiLanguageModelProvider } from '../providers/openai_provider.js';
+import { AzureOpenAiLanguageModelProvider } from '../providers/azure_openai_provider.js';
 import {
   AiEvaluationOutput,
   AiEvaluationOutputSchema,
@@ -65,6 +66,20 @@ export class AiGatewayService {
             config.AI_ADVANCED_MODEL,
             this.timeoutMs,
             config.OPENAI_BASE_URL
+          );
+          break;
+        case 'azure_openai':
+          this.fastProvider = new AzureOpenAiLanguageModelProvider(
+            config.AZURE_OPENAI_API_KEY,
+            config.AZURE_OPENAI_ENDPOINT,
+            config.AZURE_OPENAI_DEPLOYMENT,
+            this.timeoutMs
+          );
+          this.advancedProvider = new AzureOpenAiLanguageModelProvider(
+            config.AZURE_OPENAI_API_KEY,
+            config.AZURE_OPENAI_ENDPOINT,
+            config.AZURE_OPENAI_DEPLOYMENT,
+            this.timeoutMs
           );
           break;
         case 'mock':

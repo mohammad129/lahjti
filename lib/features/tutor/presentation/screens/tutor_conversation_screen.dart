@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/context_extensions.dart';
 import '../../domain/models/avatar_state.dart';
+import '../../domain/models/student_tutor_session.dart';
 import '../../domain/models/voice_session_state.dart';
 import '../providers/avatar_state_provider.dart';
 import '../providers/voice_session_provider.dart';
@@ -177,11 +178,15 @@ class _TutorConversationScreenState
           child: LayoutBuilder(
             builder: (context, constraints) {
               final screenHeight = constraints.maxHeight;
-              // AI Tutor stage occupies approximately 42–48% of the available height
-              final stageHeight = (screenHeight * 0.44).clamp(240.0, 420.0);
+              final isStudent = state.studentSession?.isSchoolStudent == true;
+              final stageHeight = (screenHeight * (isStudent ? 0.38 : 0.44)).clamp(100.0, 420.0);
 
               return Column(
                 children: [
+                  // 0. SCHOOL STUDENT 4-SESSION & 1-HOUR TRACKING HEADER
+                  if (isStudent)
+                    _buildStudentSessionBar(state, notifier, isArabic),
+
                   // 1. IMMERSIVE AI TUTOR STAGE (40–55% Screen Area)
                   SizedBox(
                     height: stageHeight,
@@ -243,6 +248,10 @@ class _TutorConversationScreenState
                     ),
                   ),
 
+                  // 3.5 SCHOOL ENGLISH TOPIC CHIPS
+                  if (isStudent)
+                    _buildTopicChipsBar(isArabic),
+
                   // 4. BOTTOM INTERACTIVE AUDIO & TEXT CONSOLE
                   _buildBottomConsole(state, notifier, l10n, isAbbas, isArabic),
                 ],
@@ -265,7 +274,7 @@ class _TutorConversationScreenState
     double stageHeight,
   ) {
     // Dynamic avatar size scaled to stage height
-    final avatarSize = (stageHeight * 0.72).clamp(160.0, 260.0);
+    final avatarSize = (stageHeight * 0.72).clamp(60.0, 260.0);
 
     return Container(
       width: double.infinity,
@@ -448,6 +457,7 @@ class _TutorConversationScreenState
           ElevatedButton(
             onPressed: () => notifier.startListening(),
             style: ElevatedButton.styleFrom(
+              minimumSize: Size.zero,
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF991B1B),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -551,32 +561,42 @@ class _TutorConversationScreenState
               msg.text,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 14,
-                height: 1.35,
-                fontWeight: FontWeight.w500,
+                fontSize: 15,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
               ),
             ),
 
-            // Tutor correction (if applicable)
-            if (!isUser && msg.shouldCorrect && msg.correctedAnswer != null)
+            // Arabic translation & guidance card (Bilingual)
+            if (!isUser &&
+                msg.explanationArabic != null &&
+                msg.explanationArabic!.isNotEmpty)
               Container(
                 margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF312E81),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0xFF14B8A6).withValues(alpha: 0.45),
+                  ),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('💡', style: TextStyle(fontSize: 14)),
-                    const SizedBox(width: 6),
+                    const Text('🇯🇴', style: TextStyle(fontSize: 15)),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        msg.correctedAnswer!,
+                        msg.explanationArabic!,
                         style: const TextStyle(
-                          color: Color(0xFFC7D2FE),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF5EEAD4),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          height: 1.45,
                         ),
                       ),
                     ),
@@ -584,22 +604,49 @@ class _TutorConversationScreenState
                 ),
               ),
 
-            // Arabic feedback note & Audio replay action
-            if (!isUser) ...[
-              if (msg.explanationArabic != null &&
-                  msg.explanationArabic!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    msg.explanationArabic!,
-                    style: const TextStyle(
-                      color: Color(0xFF94A3B8),
-                      fontSize: 11,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
+            // Tutor correction (if applicable)
+            if (!isUser && msg.shouldCorrect && msg.correctedAnswer != null)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF312E81),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF818CF8)),
                 ),
-              const SizedBox(height: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Text('💡', style: TextStyle(fontSize: 15)),
+                        SizedBox(width: 6),
+                        Text(
+                          'الصياغة الصحيحة بالإنجليزية:',
+                          style: TextStyle(
+                            color: Color(0xFFC7D2FE),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      msg.correctedAnswer!,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Audio replay action
+            if (!isUser) ...[
+              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -608,23 +655,23 @@ class _TutorConversationScreenState
                     borderRadius: BorderRadius.circular(12),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                        horizontal: 8,
+                        vertical: 3,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.volume_up_rounded,
-                            size: 14,
+                            size: 15,
                             color: Color(0xFF38BDF8),
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            isArabic ? 'استماع' : 'Listen',
+                            isArabic ? 'استماع للنطق' : 'Listen',
                             style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                               color: Color(0xFF38BDF8),
                             ),
                           ),
@@ -726,6 +773,71 @@ class _TutorConversationScreenState
               ),
             ),
 
+          // Bilingual Language Mode Toggle Pill (English / Arabic)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: GestureDetector(
+              key: const Key('tutor_input_lang_toggle_btn'),
+              onTap: () {
+                notifier.toggleInputLanguage();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color:
+                        state.inputLanguageCode == 'ar'
+                            ? const Color(0xFF14B8A6)
+                            : const Color(0xFF38BDF8),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (state.inputLanguageCode == 'ar'
+                              ? const Color(0xFF14B8A6)
+                              : const Color(0xFF38BDF8))
+                          .withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.translate_rounded,
+                      size: 15,
+                      color:
+                          state.inputLanguageCode == 'ar'
+                              ? const Color(0xFF2DD4BF)
+                              : const Color(0xFF38BDF8),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      state.inputLanguageCode == 'ar'
+                          ? '🎙️ أتحدث: العربية (🇯🇴) • اضغط للتحويل'
+                          : '🎙️ Speaking: English (🇬🇧) • Tap to switch',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color:
+                            state.inputLanguageCode == 'ar'
+                                ? const Color(0xFF2DD4BF)
+                                : const Color(0xFF38BDF8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           // Main Control Bar: Toggle Keyboard | Giant Microphone CTA | Speaker Stop
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -755,7 +867,24 @@ class _TutorConversationScreenState
               GestureDetector(
                 key: const Key('tutor_mic_cta_btn'),
                 onTap: () {
+                  if (state.studentSession?.isDailyLimitReached == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          state.studentSession?.limitReason ??
+                              (isArabic
+                                  ? 'أنهيت وقت وجلسات اليوم المتاحة (4 جلسات / ساعة كاملة). نراك غداً!'
+                                  : 'Daily sessions limit reached (4 sessions / 1 hour). See you tomorrow!'),
+                        ),
+                      ),
+                    );
+                    return;
+                  }
                   if (isProcessing) return;
+                  // Interrupt speech immediately when user wants to talk
+                  if (state.isSpeaking) {
+                    notifier.stopSpeaking();
+                  }
                   if (isListening) {
                     notifier.stopListening();
                   } else {
@@ -769,7 +898,9 @@ class _TutorConversationScreenState
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color:
-                        isListening
+                        state.studentSession?.isDailyLimitReached == true
+                            ? const Color(0xFF475569)
+                            : isListening
                             ? const Color(0xFFDC2626)
                             : (isAbbas
                                 ? const Color(0xFF0284C7)
@@ -799,7 +930,9 @@ class _TutorConversationScreenState
                               ),
                             )
                             : Icon(
-                              isListening
+                              state.studentSession?.isDailyLimitReached == true
+                                  ? Icons.lock_clock_rounded
+                                  : isListening
                                   ? Icons.stop_rounded
                                   : Icons.mic_rounded,
                               color: Colors.white,
@@ -830,6 +963,381 @@ class _TutorConversationScreenState
           ),
         ],
       ),
+    );
+  }
+
+  /// Top school student session progress bar with 4-dot tracker and 1-hour countdown
+  Widget _buildStudentSessionBar(
+    VoiceSessionState state,
+    VoiceSessionNotifier notifier,
+    bool isArabic,
+  ) {
+    final session = state.studentSession;
+    if (session == null || !session.isSchoolStudent) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        border: Border(
+          bottom: BorderSide(
+            color: session.isDailyLimitReached
+                ? const Color(0xFFEF4444)
+                : const Color(0xFF334155),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // 4-Session Pill Indicator
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(session.maxDailySessions, (index) {
+              final sessionNum = index + 1;
+              final isDone = sessionNum <= session.completedSessionsCount;
+              final isCurrent =
+                  sessionNum == session.currentSessionNumber &&
+                  !session.isDailyLimitReached;
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                width: isCurrent ? 24 : 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color:
+                      isDone
+                          ? const Color(0xFF10B981)
+                          : isCurrent
+                          ? const Color(0xFF38BDF8)
+                          : const Color(0xFF475569),
+                  boxShadow:
+                      isCurrent
+                          ? [
+                            BoxShadow(
+                              color: const Color(0xFF38BDF8).withValues(alpha: 0.5),
+                              blurRadius: 6,
+                            ),
+                          ]
+                          : null,
+                ),
+                child:
+                    isDone
+                        ? const Icon(Icons.check, size: 10, color: Colors.white)
+                        : isCurrent
+                        ? Center(
+                          child: Text(
+                            '$sessionNum',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                        : null,
+              );
+            }),
+          ),
+          const SizedBox(width: 10),
+          // Current Session Label & Countdown
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  session.sessionProgressLabel(isArabic),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  isArabic
+                      ? 'الوقت المتبقي اليوم: ${session.remainingTimeFormatted}'
+                      : 'Remaining today: ${session.remainingTimeFormatted}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color:
+                        session.remainingSecondsToday < 300
+                            ? const Color(0xFFF87171)
+                            : const Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // End session button
+          if (!session.isDailyLimitReached)
+            ElevatedButton.icon(
+              onPressed: () => _confirmEndSession(context, notifier, session, isArabic),
+              icon: const Icon(Icons.flag_rounded, size: 14),
+              label: Text(
+                isArabic ? 'إنهاء الجلسة' : 'End Session',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF334155),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Horizontal suggested conversational topic chips for school English practice
+  Widget _buildTopicChipsBar(bool isArabic) {
+    final topics =
+        isArabic
+            ? [
+              {
+                'label': '🏫 يومي في المدرسة',
+                'prompt': 'Hello! Let me tell you about my school day.',
+              },
+              {
+                'label': '📚 مادتي المفضلة',
+                'prompt':
+                    'What is your favorite school subject? Mine is English!',
+              },
+              {
+                'label': '⚽ الرياضة والهوايات',
+                'prompt':
+                    'I love playing football and video games after school.',
+              },
+              {
+                'label': '🍔 وجبتي المفضلة',
+                'prompt': "Let's talk about favorite foods and snacks!",
+              },
+              {
+                'label': '💬 محادثة حرة',
+                'prompt':
+                    "How are you today? Let's have a fun conversation in English!",
+              },
+            ]
+            : [
+              {
+                'label': '🏫 School Day',
+                'prompt': 'Hello! Let me tell you about my school day.',
+              },
+              {
+                'label': '📚 Favorite Subject',
+                'prompt':
+                    'What is your favorite school subject? Mine is English!',
+              },
+              {
+                'label': '⚽ Sports & Hobbies',
+                'prompt':
+                    'I love playing football and video games after school.',
+              },
+              {
+                'label': '🍔 Favorite Food',
+                'prompt': "Let's talk about favorite foods and snacks!",
+              },
+              {
+                'label': '💬 Free Chat',
+                'prompt':
+                    "How are you today? Let's have a fun conversation in English!",
+              },
+            ];
+
+    return Container(
+      height: 38,
+      margin: const EdgeInsets.only(bottom: 6),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemCount: topics.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final t = topics[index];
+          return ActionChip(
+            label: Text(
+              t['label']!,
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
+            ),
+            backgroundColor: const Color(0xFF1E293B),
+            side: const BorderSide(color: Color(0xFF334155), width: 0.8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            onPressed: () => _submitText(t['prompt']!),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Confirmation dialog before ending the student's active session
+  Future<void> _confirmEndSession(
+    BuildContext context,
+    VoiceSessionNotifier notifier,
+    StudentTutorSession session,
+    bool isArabic,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF1E293B),
+            title: Text(
+              isArabic ? 'إنهاء الجلسة الحالية؟' : 'End Current Session?',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              isArabic
+                  ? 'هل ترغب في إنهاء ${session.sessionProgressLabel(isArabic)} الآن؟ سيتم حفظ تقدمك ونقاط XP الخاصة بك.'
+                  : 'Would you like to finish ${session.sessionProgressLabel(isArabic)} now? Your time and XP will be saved.',
+              style: const TextStyle(color: Color(0xFF94A3B8)),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(isArabic ? 'متابعة المحادثة' : 'Continue Chat'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0284C7),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(isArabic ? 'إنهاء وحفظ' : 'End & Save'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed == true) {
+      await notifier.endCurrentSession();
+      if (!context.mounted) return;
+      _showSessionCompletionDialog(context, notifier, isArabic);
+    }
+  }
+
+  /// Celebratory completion bottomsheet with remaining sessions information
+  void _showSessionCompletionDialog(
+    BuildContext context,
+    VoiceSessionNotifier notifier,
+    bool isArabic,
+  ) {
+    final state = ref.read(voiceSessionNotifierProvider);
+    final session = state.studentSession;
+    final remaining = session?.remainingSessions ?? 0;
+    final isDailyDone = session?.isDailyLimitReached ?? false;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0F172A),
+      isDismissible: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color:
+                      isDailyDone
+                          ? const Color(0xFF10B981).withValues(alpha: 0.2)
+                          : const Color(0xFF38BDF8).withValues(alpha: 0.2),
+                ),
+                child: Center(
+                  child: Text(
+                    isDailyDone ? '🏆' : '🌟',
+                    style: const TextStyle(fontSize: 30),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isDailyDone
+                    ? (isArabic
+                        ? 'إنجاز يومي رائع يا بطل! 🏆'
+                        : 'Daily Goal Achieved! 🏆')
+                    : (isArabic ? 'أحسنت يا بطل! 👏' : 'Great Job! 👏'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isDailyDone
+                    ? (isArabic
+                        ? 'أنهيت جلساتك الـ 4 لهذا اليوم (ساعة كاملة من التحدث بالإنجليزية). نراك غداً لمزيد من الطلاقة والإبداع!'
+                        : 'You completed your 4 daily sessions (1 full hour of English conversation). See you tomorrow!')
+                    : (isArabic
+                        ? 'أنهيت هذه الجلسة بنجاح! متبقي لك $remaining جلسات اليوم.'
+                        : 'Session completed successfully! You have $remaining sessions left today.'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF94A3B8),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF334155)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _handleBackNavigation();
+                      },
+                      child: Text(
+                        isArabic ? 'العودة للرئيسية' : 'Back to Home',
+                      ),
+                    ),
+                  ),
+                  if (!isDailyDone && remaining > 0) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          notifier.startNextSession();
+                        },
+                        child: Text(
+                          isArabic ? 'بدء الجلسة التالية' : 'Next Session',
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

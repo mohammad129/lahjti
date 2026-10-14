@@ -41,7 +41,7 @@ export class UsageMeteringService {
         return {
           maxDailyRequests: config.DAILY_QUOTA_SCHOOL_STUDENT_REQUESTS,
           maxDailyTokens: 60000,
-          maxDailyVoiceSeconds: 1200, // 20 minutes
+          maxDailyVoiceSeconds: config.DAILY_QUOTA_SCHOOL_STUDENT_VOICE_SECONDS, // 1 hour per day (3600 seconds)
           maxBurstPerMinute: 20,
         };
       }
@@ -65,7 +65,7 @@ export class UsageMeteringService {
         } else {
           maxRequests = config.DAILY_QUOTA_SCHOOL_STUDENT_REQUESTS;
           maxTokens = 60000;
-          maxVoiceSeconds = 1200;
+          maxVoiceSeconds = config.DAILY_QUOTA_SCHOOL_STUDENT_VOICE_SECONDS; // 1 hour per day (3600 seconds)
           maxBurst = 20;
         }
       } else {
@@ -203,6 +203,252 @@ export class UsageMeteringService {
   }
 
   /**
+   * Check if a given user is an active school student
+   */
+  public async isSchoolStudent(userId: string): Promise<boolean> {
+    if (!userId || userId === 'anonymous') return false;
+    const db = getDatabase();
+    try {
+      const membership = await db.getSchoolMembership(userId);
+      if (membership && membership.role === 'student' && membership.status === 'active') {
+        return true;
+      }
+      const sub = await db.getSubscription(userId);
+      if (sub && sub.accountContext === 'school' && sub.role === 'student') {
+        return true;
+      }
+      const profile = await db.getProfile(userId);
+      if (profile && (profile.accountContext === 'school' || profile.role === 'student')) {
+        return true;
+      }
+    } catch {
+      // Non-fatal fallback
+    }
+    return false;
+  }
+
+  /**
+   * Get real-time student tutor session status for today (4 sessions, 1 hour total)
+   */
+  public async getStudentSessionStatus(userId: string): Promise<{
+    isSchoolStudent: boolean;
+    maxDailySessions: number;
+    completedSessionsCount: number;
+    currentSessionNumber: number;
+    remainingSessions: number;
+    maxDailySeconds: number;
+    totalSecondsUsedToday: number;
+    remainingSecondsToday: number;
+    activeSessionId: string | null;
+    activeSessionDurationSeconds: number;
+    canStartOrContinueSession: boolean;
+    limitReason?: string;
+  }> {
+    const isStudent = await this.isSchoolStudent(userId);
+    const maxDailySessions = config.DAILY_QUOTA_SCHOOL_STUDENT_MAX_SESSIONS || 4;
+    const maxDailySeconds = config.DAILY_QUOTA_SCHOOL_STUDENT_VOICE_SECONDS || 3600;
+
+    if (!isStudent) {
+      return {
+        isSchoolStudent: false,
+        maxDailySessions,
+        completedSessionsCount: 0,
+        currentSessionNumber: 1,
+        remainingSessions: maxDailySessions,
+        maxDailySeconds,
+        totalSecondsUsedToday: 0,
+        remainingSecondsToday: maxDailySeconds,
+        activeSessionId: null,
+        activeSessionDurationSeconds: 0,
+        canStartOrContinueSession: true,
+      };
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const db = getDatabase();
+    const sessions = await db.getStudentDailyTutorSessions(userId, today);
+
+    const completedSessions = sessions.filter((s) => s.status === 'completed');
+    const activeSession = sessions.find((s) => s.status === 'active');
+
+    const totalSecondsUsedToday = Math.round(
+      sessions.reduce((sum, s) => sum + (Number(s.durationSeconds) || 0), 0)
+    );
+    const remainingSecondsToday = Math.max(0, maxDailySeconds - totalSecondsUsedToday);
+    const completedSessionsCount = completedSessions.length;
+
+    let currentSessionNumber = activeSession
+      ? activeSession.sessionNumber
+      : Math.min(maxDailySessions, completedSessionsCount + 1);
+
+    const remainingSessions = Math.max(0, maxDailySessions - completedSessionsCount);
+
+    let canStartOrContinueSession = true;
+    let limitReason: string | undefined;
+
+    if (remainingSecondsToday <= 0) {
+      canStartOrContinueSession = false;
+      limitReason =
+        'أحسنت يا بطل! لقد استنفدت وقت المحادثة اليومي المخصص لك (ساعة كاملة). نراك غداً لمتابعة التعلّم!';
+    } else if (completedSessionsCount >= maxDailySessions && !activeSession) {
+      canStartOrContinueSession = false;
+      limitReason =
+        'أحسنت يا بطل! أنهيت جلساتك الـ 4 لهذا اليوم. خذ استراحة ممتعة ونلتقي غداً في جلسات جديدة!';
+    }
+
+    return {
+      isSchoolStudent: true,
+      maxDailySessions,
+      completedSessionsCount,
+      currentSessionNumber,
+      remainingSessions,
+      maxDailySeconds,
+      totalSecondsUsedToday,
+      remainingSecondsToday,
+      activeSessionId: activeSession?.id ?? null,
+      activeSessionDurationSeconds: Math.round(activeSession?.durationSeconds || 0),
+      canStartOrContinueSession,
+      limitReason,
+    };
+  }
+
+  /**
+   * Explicitly starts a new session for a school student (within the 4 daily sessions limit)
+   */
+  public async startStudentSession(userId: string): Promise<any> {
+    const isStudent = await this.isSchoolStudent(userId);
+    if (!isStudent) {
+      return { isSchoolStudent: false };
+    }
+
+    const status = await this.getStudentSessionStatus(userId);
+    if (!status.canStartOrContinueSession) {
+      throw new Error(status.limitReason || 'Daily AI session limit reached.');
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const db = getDatabase();
+    const sessions = await db.getStudentDailyTutorSessions(userId, today);
+    const activeSession = sessions.find((s) => s.status === 'active');
+
+    if (activeSession) {
+      return {
+        session: activeSession,
+        status,
+      };
+    }
+
+    const nextSessionNumber = status.completedSessionsCount + 1;
+    const newSession = await db.saveStudentTutorSession({
+      id: `sess_${userId}_${today}_${nextSessionNumber}`,
+      studentId: userId,
+      sessionDate: today,
+      sessionNumber: nextSessionNumber,
+      durationSeconds: 0,
+      turnsCount: 0,
+      status: 'active',
+      startedAt: new Date(),
+    });
+
+    const updatedStatus = await this.getStudentSessionStatus(userId);
+    return {
+      session: newSession,
+      status: updatedStatus,
+    };
+  }
+
+  /**
+   * Records elapsed turn duration into the student's active daily session
+   */
+  public async recordStudentTurn(
+    userId: string,
+    durationSeconds: number = 10,
+    sessionId?: string
+  ): Promise<void> {
+    const isStudent = await this.isSchoolStudent(userId);
+    if (!isStudent) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const db = getDatabase();
+    const sessions = await db.getStudentDailyTutorSessions(userId, today);
+
+    let targetSession = sessionId
+      ? sessions.find((s) => s.id === sessionId)
+      : sessions.find((s) => s.status === 'active');
+
+    if (!targetSession) {
+      const completedCount = sessions.filter((s) => s.status === 'completed').length;
+      if (completedCount >= (config.DAILY_QUOTA_SCHOOL_STUDENT_MAX_SESSIONS || 4)) {
+        return; // Already capped
+      }
+      const nextNum = completedCount + 1;
+      targetSession = await db.saveStudentTutorSession({
+        id: `sess_${userId}_${today}_${nextNum}`,
+        studentId: userId,
+        sessionDate: today,
+        sessionNumber: nextNum,
+        durationSeconds: 0,
+        turnsCount: 0,
+        status: 'active',
+        startedAt: new Date(),
+      });
+    }
+
+    const newDuration = Math.round(
+      (Number(targetSession.durationSeconds) || 0) + Math.max(durationSeconds, 5)
+    );
+    const newTurns = (targetSession.turnsCount || 0) + 1;
+
+    // Check if total daily voice seconds reached max limit (1 hour = 3600 seconds)
+    const otherSessionsTotal = sessions
+      .filter((s) => s.id !== targetSession.id)
+      .reduce((sum, s) => sum + (Number(s.durationSeconds) || 0), 0);
+    const isCumulativeDailyHourExceeded =
+      otherSessionsTotal + newDuration >= (config.DAILY_QUOTA_SCHOOL_STUDENT_VOICE_SECONDS || 3600);
+
+    await db.updateStudentTutorSession(targetSession.id, {
+      durationSeconds: newDuration,
+      turnsCount: newTurns,
+      status: isCumulativeDailyHourExceeded ? 'completed' : targetSession.status,
+      endedAt: isCumulativeDailyHourExceeded ? new Date() : targetSession.endedAt,
+    });
+  }
+
+  /**
+   * Explicitly concludes an active session for a student, advancing to next session slot
+   */
+  public async endStudentSession(
+    userId: string,
+    sessionId?: string
+  ): Promise<{ session: any; status: any }> {
+    const isStudent = await this.isSchoolStudent(userId);
+    if (!isStudent) {
+      return { session: null, status: await this.getStudentSessionStatus(userId) };
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const db = getDatabase();
+    const sessions = await db.getStudentDailyTutorSessions(userId, today);
+
+    const targetSession = sessionId
+      ? sessions.find((s) => s.id === sessionId)
+      : sessions.find((s) => s.status === 'active');
+
+    if (targetSession && targetSession.status === 'active') {
+      await db.updateStudentTutorSession(targetSession.id, {
+        status: 'completed',
+        endedAt: new Date(),
+      });
+    }
+
+    const updatedStatus = await this.getStudentSessionStatus(userId);
+    return {
+      session: targetSession,
+      status: updatedStatus,
+    };
+  }
+
+  /**
    * Get telemetry summary for current user
    */
   public async getDailyUsageSummary(userId: string): Promise<any> {
@@ -218,6 +464,57 @@ export class UsageMeteringService {
       remainingRequests: Math.max(0, quota.maxDailyRequests - totals.totalRequests),
       remainingTokens: Math.max(0, quota.maxDailyTokens - totals.totalTokens),
       remainingVoiceSeconds: Math.max(0, quota.maxDailyVoiceSeconds - totals.totalVoiceSeconds),
+    };
+  }
+
+  /**
+   * Detailed AI Cost Breakdown in USD according to Requirement 16
+   */
+  public async getCostBreakdown(userId: string): Promise<any> {
+    const today = new Date().toISOString().split('T')[0];
+    const db = getDatabase();
+    const records = await db.getDailyAiUsage(userId, today);
+
+    // Pricing rates per unit in USD
+    const INPUT_TOKEN_COST = 0.0000005; // $0.50 per 1M
+    const OUTPUT_TOKEN_COST = 0.0000015; // $1.50 per 1M
+    const VOICE_SECOND_COST = 0.00002; // $0.02 per 1000s
+
+    let totalCostUsd = 0;
+    let savedCostUsd = 0;
+
+    const featureBreakdown = records.map((r) => {
+      const inputCost = (r.inputTokens || 0) * INPUT_TOKEN_COST;
+      const outputCost = (r.outputTokens || 0) * OUTPUT_TOKEN_COST;
+      const voiceCost = (r.voiceSeconds || 0) * VOICE_SECOND_COST;
+      const featureCost = inputCost + outputCost + voiceCost;
+
+      totalCostUsd += featureCost;
+
+      // Calculate cost saved by cached / deterministic database hits
+      const saved = (r.cachedResponsesCount || 0) * (200 * INPUT_TOKEN_COST + 120 * OUTPUT_TOKEN_COST);
+      savedCostUsd += saved;
+
+      return {
+        feature: r.feature,
+        modelUsed: r.modelUsed,
+        requestsCount: r.requestCount,
+        inputTokens: r.inputTokens,
+        outputTokens: r.outputTokens,
+        voiceSeconds: r.voiceSeconds,
+        cachedResponsesCount: r.cachedResponsesCount,
+        costUsd: Math.round(featureCost * 10000) / 10000,
+      };
+    });
+
+    return {
+      userId,
+      date: today,
+      totalCostUsd: Math.round(totalCostUsd * 10000) / 10000,
+      savedCostUsd: Math.round(savedCostUsd * 10000) / 10000,
+      currency: 'USD',
+      features: featureBreakdown,
+      projectedMonthlyCostUsd: Math.round(totalCostUsd * 30 * 100) / 100,
     };
   }
 }

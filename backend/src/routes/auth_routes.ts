@@ -7,7 +7,10 @@ export function createAuthRouter(controller = new AuthController()): Router {
   const router = Router();
   router.post('/register', placementRateLimiter, controller.register);
   router.post('/login', placementRateLimiter, controller.login);
+  router.post('/student-code-login', placementRateLimiter, controller.studentCodeLogin);
   router.get('/session', authMiddleware, controller.session);
   router.post('/logout', authMiddleware, controller.logout);
+  router.post('/generate-student-code', authMiddleware, controller.generateStudentCode);
   return router;
 }
+

@@ -24,13 +24,23 @@ class RemoteAuthRepository implements AuthRepository {
     final response = await _apiClient.post<dynamic>('/auth/login', data: {'email': email, 'password': password});
     return _apply(response.data, '');
   }
+  @override
+  Future<AuthUser> signInWithStudentCode({required String studentCode, required String pin}) async {
+    final response = await _apiClient.post<dynamic>('/auth/student-code-login', data: {
+      'studentCode': studentCode.trim().toUpperCase(),
+      'pin': pin.trim(),
+    });
+    return _apply(response.data, 'طالب كود: ${studentCode.trim().toUpperCase()}');
+  }
   AuthUser _apply(dynamic body, String fullName) {
     final data = body is Map ? body['data'] : null;
     if (data is! Map || data['token'] is! String || data['user'] is! Map) throw StateError('Invalid authentication response');
     final user = data['user'] as Map;
     _token = data['token'] as String;
     _apiClient.setAuthToken(_token);
-    _user = AuthUser(id: '${user['id']}', email: '${user['email']}', fullName: fullName.isNotEmpty ? fullName : '${user['email']}', createdAt: DateTime.now());
+    final userEmail = user['email']?.toString() ?? '${user['studentCode'] ?? user['id']}@school.lahjti';
+    final userName = fullName.isNotEmpty ? fullName : (user['fullName']?.toString() ?? userEmail);
+    _user = AuthUser(id: '${user['id']}', email: userEmail, fullName: userName, createdAt: DateTime.now());
     _changes.add(_user);
     return _user!;
   }

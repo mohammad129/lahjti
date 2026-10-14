@@ -323,5 +323,53 @@ describe('Step 24: Real School Backend Integration & Security Tests', () => {
       expect(res.body.data.student.voiceRecordings).toBeUndefined();
       expect(res.body.data.student.systemPrompts).toBeUndefined();
     });
+
+    it('allows Teacher A to access tutor-oversight with 4-session tracking and metrics', async () => {
+      const res = await request(app)
+        .get('/api/v1/teacher/tutor-oversight')
+        .set('Authorization', `Bearer ${teacherA}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.summary).toBeDefined();
+      expect(res.body.data.summary.totalStudents).toBeGreaterThan(0);
+      expect(res.body.data.summary.averageFluencyScore).toBeDefined();
+      expect(res.body.data.commonGrammarPoints.length).toBeGreaterThan(0);
+      expect(Array.isArray(res.body.data.students)).toBe(true);
+
+      const student = res.body.data.students[0];
+      expect(student.maxDailySessions).toBe(4);
+      expect(student.sessions.length).toBe(4);
+      expect(student.sessions[0].sessionNumber).toBe(1);
+      expect(student.sessions[3].sessionNumber).toBe(4);
+      // Privacy check: no raw transcripts or audio
+      expect(student.rawTranscripts).toBeUndefined();
+      expect(student.audioRecordings).toBeUndefined();
+    });
+
+    it('allows Teacher A to filter tutor-oversight by valid assigned classId', async () => {
+      const res = await request(app)
+        .get('/api/v1/teacher/tutor-oversight?classId=class_alpha_grade7')
+        .set('Authorization', `Bearer ${teacherA}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.students.every((s: any) => s.classId === 'class_alpha_grade7')).toBe(true);
+    });
+
+    it('prevents Teacher A from viewing tutor-oversight for another teacher class with 403', async () => {
+      const res = await request(app)
+        .get('/api/v1/teacher/tutor-oversight?classId=class_beta_grade8')
+        .set('Authorization', `Bearer ${teacherA}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('prevents Student A from accessing tutor-oversight with 403 Forbidden', async () => {
+      const res = await request(app)
+        .get('/api/v1/teacher/tutor-oversight')
+        .set('Authorization', `Bearer ${studentA}`);
+
+      expect(res.status).toBe(403);
+    });
   });
 });

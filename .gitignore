@@ -61,3 +61,8 @@ backend/dist/
 android/key.properties
 *.jks
 *.keystore
+
+# Local build artifacts
+.gradle-pilot-build*/
+ai_training/
+*.png

@@ -36,7 +36,7 @@ export class GeminiLanguageModelProvider implements LanguageModelProvider {
 
   constructor(apiKey: string, model: string = 'gemini-2.5-flash', timeoutMs: number = 10000) {
     this.apiKey = apiKey;
-    this.model = model;
+    this.model = model.trim();
     this.timeoutMs = timeoutMs;
   }
 
@@ -182,6 +182,8 @@ export class GeminiLanguageModelProvider implements LanguageModelProvider {
     }
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Gemini API Error: Status ${response.status}, Body: ${errorText}`);
       throw new AiServiceUnavailableError(
         `Gemini conversation returned status ${response.status}`,
         'تعذر إتمام المحادثة مع المعلم الذكي حالياً. يرجى المحاولة مرة أخرى.'

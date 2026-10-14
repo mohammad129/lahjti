@@ -5,6 +5,7 @@ import {
   jsonb,
   pgTable,
   real,
+  text,
   timestamp,
   uniqueIndex,
   varchar,
@@ -337,4 +338,318 @@ export const aiUsageRecords = pgTable(
   ]
 );
 
+/**
+ * 17. School Tutor Sessions Table
+ * Authoritative tracking of daily tutor sessions for school students:
+ * maximum 4 sessions per day, bounded by a cumulative 1-hour (3600 seconds) cap.
+ */
+export const schoolTutorSessions = pgTable(
+  'school_tutor_sessions',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    studentId: varchar('student_id', { length: 128 }).notNull(),
+    sessionDate: varchar('session_date', { length: 10 }).notNull(), // 'YYYY-MM-DD'
+    sessionNumber: integer('session_number').notNull(), // 1, 2, 3, 4
+    durationSeconds: real('duration_seconds').notNull().default(0),
+    turnsCount: integer('turns_count').notNull().default(0),
+    status: varchar('status', { length: 32 }).notNull().default('active'), // 'active' | 'completed'
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp('ended_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('student_session_date_idx').on(table.studentId, table.sessionDate),
+  ]
+);
 
+/**
+ * 18. Plans Table
+ * Multi-target structured curriculum plans (Conversation, Interviews, Travel, School, 60-Day, etc.)
+ */
+export const plans = pgTable('plans', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  titleAr: varchar('title_ar', { length: 255 }).notNull(),
+  titleEn: varchar('title_en', { length: 255 }).notNull(),
+  descriptionAr: text('description_ar').notNull(),
+  category: varchar('category', { length: 64 }).notNull(), // 'conversation' | 'job_interview' | 'travel' | 'study' | 'school' | 'intensive_60'
+  targetGoal: varchar('target_goal', { length: 64 }).notNull(),
+  targetAgeGroup: varchar('target_age_group', { length: 32 }).notNull(), // 'kids_6_10' | 'teens_11_15' | 'youth_16_20' | 'adults_21_plus'
+  targetLevel: varchar('target_level', { length: 16 }).notNull(), // 'beginner' | 'elementary' | 'intermediate' | 'advanced'
+  durationDays: integer('duration_days').notNull().default(60),
+  totalLessons: integer('total_lessons').notNull().default(60),
+  badgeRewardId: varchar('badge_reward_id', { length: 64 }),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * 19. Plan Days Table
+ * Day 1 to Day 60 daily sequence.
+ */
+export const planDays = pgTable(
+  'plan_days',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    planId: varchar('plan_id', { length: 64 }).notNull(),
+    dayNumber: integer('day_number').notNull(),
+    titleAr: varchar('title_ar', { length: 255 }).notNull(),
+    descriptionAr: text('description_ar').notNull(),
+    focusTopic: varchar('focus_topic', { length: 128 }).notNull(),
+    totalXpReward: integer('total_xp_reward').notNull().default(80),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('plan_day_idx').on(table.planId, table.dayNumber),
+  ]
+);
+
+/**
+ * 20. Plan Activities Table
+ * Ordered micro-activities per day (quick review, new vocab, listening, dialogue, grammar, pronunciation, game, quiz, summary).
+ */
+export const planActivities = pgTable('plan_activities', {
+  id: varchar('id', { length: 128 }).primaryKey(),
+  planDayId: varchar('plan_day_id', { length: 128 }).notNull(),
+  stepOrder: integer('step_order').notNull(), // 1 to 10
+  activityType: varchar('activity_type', { length: 64 }).notNull(), // 'quick_review' | 'new_vocabulary' | 'listening' | 'dialogue' | 'grammar_bite' | 'pronunciation_drill' | 'mini_game' | 'quick_quiz' | 'day_summary'
+  titleAr: varchar('title_ar', { length: 255 }).notNull(),
+  contentPayload: jsonb('content_payload').notNull().default({}),
+  audioAssetId: varchar('audio_asset_id', { length: 128 }),
+  xpReward: integer('xp_reward').notNull().default(10),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * 21. Student Plan Progress Table
+ * Student's current active progress through an enrolled curriculum plan.
+ */
+export const studentPlanProgress = pgTable(
+  'student_plan_progress',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    studentId: varchar('student_id', { length: 128 }).notNull(),
+    planId: varchar('plan_id', { length: 64 }).notNull(),
+    currentDay: integer('current_day').notNull().default(1),
+    completedDays: integer('completed_days').notNull().default(0),
+    status: varchar('status', { length: 32 }).notNull().default('active'), // 'active' | 'completed' | 'paused'
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('student_plan_idx').on(table.studentId, table.planId),
+  ]
+);
+
+/**
+ * 22. Student Activity Logs Table
+ * Granular completion tracking per day activity.
+ */
+export const studentActivityLogs = pgTable(
+  'student_activity_logs',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    studentId: varchar('student_id', { length: 128 }).notNull(),
+    planDayId: varchar('plan_day_id', { length: 128 }).notNull(),
+    activityId: varchar('activity_id', { length: 128 }).notNull(),
+    score: integer('score').notNull().default(100),
+    xpEarned: integer('xp_earned').notNull().default(10),
+    isCompleted: boolean('is_completed').notNull().default(true),
+    completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('student_activity_idx').on(table.studentId, table.activityId),
+  ]
+);
+
+/**
+ * 23. Student Codes Table
+ * Quick-login identifier paired with scrypt-hashed PIN for student accounts.
+ */
+export const studentCodes = pgTable('student_codes', {
+  id: varchar('id', { length: 128 }).primaryKey(),
+  studentId: varchar('student_id', { length: 128 }).notNull().unique(),
+  studentCode: varchar('student_code', { length: 32 }).notNull().unique(), // e.g. 'ST-8F4K29'
+  pinHash: varchar('pin_hash', { length: 512 }).notNull(),
+  schoolId: varchar('school_id', { length: 128 }),
+  classroomId: varchar('classroom_id', { length: 128 }),
+  teacherId: varchar('teacher_id', { length: 128 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * 24. Points Transactions Table
+ * Server-authoritative points ledger recording every single point source.
+ */
+export const pointsTransactions = pgTable(
+  'points_transactions',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    studentId: varchar('student_id', { length: 128 }).notNull(),
+    amount: integer('amount').notNull(),
+    reasonCode: varchar('reason_code', { length: 64 }).notNull(), // 'lesson_completed' | 'correct_answer' | 'exam_completed' | 'game_completed' | 'daily_streak' | 'plan_day_finished'
+    descriptionAr: varchar('description_ar', { length: 255 }).notNull(),
+    referenceId: varchar('reference_id', { length: 128 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('points_tx_student_date_idx').on(table.studentId, table.createdAt),
+  ]
+);
+
+/**
+ * 25. Student Mistakes Table
+ * Spaced-repetition error tracking (SuperMemo-2 / Leitner intervals) for continuous mastery.
+ */
+export const studentMistakes = pgTable(
+  'student_mistakes',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    studentId: varchar('student_id', { length: 128 }).notNull(),
+    contentId: varchar('content_id', { length: 128 }).notNull(),
+    skillType: varchar('skill_type', { length: 64 }).notNull(), // 'vocabulary' | 'grammar' | 'listening' | 'spelling' | 'pronunciation'
+    itemPrompt: varchar('item_prompt', { length: 512 }).notNull(),
+    correctAnswer: varchar('correct_answer', { length: 512 }).notNull(),
+    studentLastWrongAnswer: varchar('student_last_wrong_answer', { length: 512 }),
+    mistakeCount: integer('mistake_count').notNull().default(1),
+    intervalDays: integer('interval_days').notNull().default(1),
+    easeFactor: real('ease_factor').notNull().default(2.5),
+    repetitions: integer('repetitions').notNull().default(0),
+    mastered: boolean('mastered').notNull().default(false),
+    lastMistakeAt: timestamp('last_mistake_at', { withTimezone: true }).notNull().defaultNow(),
+    nextReviewAt: timestamp('next_review_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('student_mistake_idx').on(table.studentId, table.contentId),
+    index('student_review_idx').on(table.studentId, table.nextReviewAt, table.mastered),
+  ]
+);
+
+/**
+ * 26. Teacher Exams Table
+ * Exams created by teachers for classes with dates, duration, and pass requirements.
+ */
+export const exams = pgTable('exams', {
+  id: varchar('id', { length: 128 }).primaryKey(),
+  teacherId: varchar('teacher_id', { length: 128 }).notNull(),
+  schoolId: varchar('school_id', { length: 128 }),
+  classroomId: varchar('classroom_id', { length: 128 }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  durationMinutes: integer('duration_minutes').notNull().default(30),
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
+  totalPoints: integer('total_points').notNull().default(100),
+  passPoints: integer('pass_points').notNull().default(60),
+  isPublished: boolean('is_published').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * 27. Exam Questions Table
+ * Questions created by teachers with server-authoritative keys across 8 question types.
+ */
+export const examQuestions = pgTable('exam_questions', {
+  id: varchar('id', { length: 128 }).primaryKey(),
+  examId: varchar('exam_id', { length: 128 }).notNull(),
+  questionOrder: integer('question_order').notNull(),
+  questionType: varchar('question_type', { length: 64 }).notNull(), // 'multiple_choice' | 'true_false' | 'fill_in_the_blank' | 'matching' | 'word_order' | 'image_choice' | 'listening' | 'free_writing'
+  questionText: text('question_text').notNull(),
+  instructionsAr: varchar('instructions_ar', { length: 512 }),
+  audioAssetUrl: varchar('audio_asset_url', { length: 512 }),
+  imageAssetUrl: varchar('image_asset_url', { length: 512 }),
+  options: jsonb('options').$type<any[]>().notNull().default([]),
+  correctAnswer: jsonb('correct_answer').notNull(),
+  points: integer('points').notNull().default(5),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * 28. Exam Submissions Table
+ * Student test submissions evaluated automatically in backend logic with mistake breakdown.
+ */
+export const examSubmissions = pgTable(
+  'exam_submissions',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    examId: varchar('exam_id', { length: 128 }).notNull(),
+    studentId: varchar('student_id', { length: 128 }).notNull(),
+    score: integer('score').notNull().default(0),
+    totalPoints: integer('total_points').notNull().default(100),
+    percentage: real('percentage').notNull().default(0.0),
+    isPassed: boolean('is_passed').notNull().default(false),
+    studentAnswers: jsonb('student_answers').$type<Record<string, any>>().notNull().default({}),
+    evaluatedMistakes: jsonb('evaluated_mistakes').$type<any[]>().notNull().default([]),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('exam_student_submission_idx').on(table.examId, table.studentId),
+  ]
+);
+
+/**
+ * 29. Educational Games Table
+ * Teacher/Admin managed educational games hub.
+ */
+export const educationalGames = pgTable('educational_games', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  nameAr: varchar('name_ar', { length: 255 }).notNull(),
+  nameEn: varchar('name_en', { length: 255 }).notNull(),
+  gameType: varchar('game_type', { length: 64 }).notNull(), // 'word_match' | 'sentence_scramble' | 'memory_cards' | 'audio_challenge' | 'speed_quiz'
+  targetAgeGroup: varchar('target_age_group', { length: 32 }).notNull().default('all'),
+  difficulty: varchar('difficulty', { length: 32 }).notNull().default('beginner'),
+  classroomId: varchar('classroom_id', { length: 128 }),
+  durationSeconds: integer('duration_seconds').notNull().default(180),
+  xpReward: integer('xp_reward').notNull().default(25),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * 30. Game Questions Table
+ * Questions and media assets linked to games.
+ */
+export const gameQuestions = pgTable('game_questions', {
+  id: varchar('id', { length: 128 }).primaryKey(),
+  gameId: varchar('game_id', { length: 64 }).notNull(),
+  prompt: varchar('prompt', { length: 512 }).notNull(),
+  correctAnswer: varchar('correct_answer', { length: 512 }).notNull(),
+  distractors: jsonb('distractors').$type<string[]>().notNull().default([]),
+  imageUrl: varchar('image_url', { length: 512 }),
+  audioUrl: varchar('audio_url', { length: 512 }),
+  points: integer('points').notNull().default(5),
+});
+
+/**
+ * 31. Audio Assets Table
+ * Pre-recorded audio files catalog for zero-TTS repeat usage.
+ */
+export const audioAssets = pgTable(
+  'audio_assets',
+  {
+    id: varchar('id', { length: 128 }).primaryKey(),
+    category: varchar('category', { length: 64 }).notNull(), // 'teacher_voice' | 'word_pronunciation' | 'sentence_audio' | 'instructions' | 'encouragement'
+    textContent: varchar('text_content', { length: 512 }).notNull(),
+    accent: varchar('accent', { length: 32 }).notNull().default('american'),
+    audioUrl: varchar('audio_url', { length: 512 }).notNull(),
+    speakerName: varchar('speaker_name', { length: 128 }).default('Teacher'),
+    fileSizeBytes: integer('file_size_bytes'),
+    durationSeconds: real('duration_seconds'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('audio_content_category_idx').on(table.textContent, table.category),
+  ]
+);
+
+/**
+ * 32. Encouragement Templates Table
+ * Pre-authored friendly, motivating Arabic phrases chosen dynamically based on student state.
+ */
+export const encouragementTemplates = pgTable('encouragement_templates', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  triggerContext: varchar('trigger_context', { length: 64 }).notNull(), // 'day_start' | 'streak_milestone' | 'high_score' | 'after_mistake' | 'day_complete'
+  tone: varchar('tone', { length: 32 }).notNull().default('warm_friendly'),
+  messageAr: varchar('message_ar', { length: 512 }).notNull(),
+});

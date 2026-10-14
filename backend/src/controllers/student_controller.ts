@@ -98,4 +98,71 @@ export class StudentController {
       next(err);
     }
   };
+
+  submitExam = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const studentId = this.getAuthStudentId(req);
+      const { examId } = req.params;
+      const { answers } = req.body;
+      const { getDatabase } = await import('../db/index.js');
+      const { ExamManagementService } = await import('../services/exam_management_service.js');
+      const examService = new ExamManagementService(getDatabase());
+      const result = await examService.submitExam(examId, studentId, answers || {});
+      res.status(200).json({ success: true, data: result });
+    } catch (err) { next(err); }
+  };
+
+  getMistakeReviews = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const studentId = this.getAuthStudentId(req);
+      const { getDatabase } = await import('../db/index.js');
+      const { SpacedRepetitionMistakeService } = await import('../services/mistake_service.js');
+      const mistakeService = new SpacedRepetitionMistakeService(getDatabase());
+      const reviews = await mistakeService.getDueReviews(studentId);
+      res.status(200).json({ success: true, data: reviews });
+    } catch (err) { next(err); }
+  };
+
+  attemptMistakeReview = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const studentId = this.getAuthStudentId(req);
+      const { contentId } = req.params;
+      const { studentAnswer } = req.body;
+      const { getDatabase } = await import('../db/index.js');
+      const { SpacedRepetitionMistakeService } = await import('../services/mistake_service.js');
+      const mistakeService = new SpacedRepetitionMistakeService(getDatabase());
+      const result = await mistakeService.submitReviewAttempt(studentId, contentId, String(studentAnswer || ''));
+      res.status(200).json({ success: true, data: result });
+    } catch (err) { next(err); }
+  };
+
+  getPointsHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const studentId = this.getAuthStudentId(req);
+      const { getDatabase } = await import('../db/index.js');
+      const db = getDatabase();
+      const transactions = await db.getPointsTransactions(studentId);
+      const progress = await db.getProgress(studentId);
+      res.status(200).json({
+        success: true,
+        data: {
+          totalPoints: progress?.totalXp || 0,
+          transactions,
+        },
+      });
+    } catch (err) { next(err); }
+  };
+
+  playGame = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const studentId = this.getAuthStudentId(req);
+      const { gameId } = req.params;
+      const { getDatabase } = await import('../db/index.js');
+      const { GameManagementService } = await import('../services/game_management_service.js');
+      const gameService = new GameManagementService(getDatabase());
+      const result = await gameService.submitGamePlay(gameId, studentId, req.body);
+      res.status(200).json({ success: true, data: result });
+    } catch (err) { next(err); }
+  };
 }
+

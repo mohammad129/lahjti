@@ -27,4 +27,9 @@ class AppRoutes {
   static const String games = '/games';
   static const String gamePlay = '/student/games/:gameId';
   static const String gamePlayDirect = '/games/:gameId';
+  static const String plans = '/plans';
+  static const String planDetail = '/plans/:planId';
+  static const String planSession = '/plans/:planId/day/:dayNumber';
+  static const String studentMistakes = '/student/mistakes';
+  static const String teacherExamBuilder = '/teacher/exams/new';
 }

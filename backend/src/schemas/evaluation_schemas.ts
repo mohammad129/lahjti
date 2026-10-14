@@ -63,6 +63,8 @@ export const QuestionSchema = z.object({
   }),
   prompt: z.string().min(1, 'Question prompt is required').max(500),
   promptArabic: z.string().max(500).optional(),
+  expectedAnswer: z.string().optional(),
+  options: z.array(z.string()).optional(),
 });
 
 export const EvaluateRequestSchema = z.object({

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../onboarding/domain/models/tutor_persona.dart';
+import 'student_tutor_session.dart';
 
 /// Distinct operational states for the real-time voice session.
 enum VoiceSessionStatus {
@@ -28,6 +29,7 @@ class VoiceMessage {
   final String? audioBase64;
   final String? voiceProvider;
   final String? conversationLanguage;
+  final StudentTutorSession? studentSession;
   final DateTime timestamp;
 
   const VoiceMessage({
@@ -43,6 +45,7 @@ class VoiceMessage {
     this.audioBase64,
     this.voiceProvider,
     this.conversationLanguage,
+    this.studentSession,
     required this.timestamp,
   });
 
@@ -68,6 +71,12 @@ class VoiceMessage {
       audioBase64: json['audioBase64'] as String?,
       voiceProvider: json['voiceProvider'] as String?,
       conversationLanguage: json['conversationLanguage'] as String?,
+      studentSession:
+          json['studentSession'] != null
+              ? StudentTutorSession.fromJson(
+                Map<String, dynamic>.from(json['studentSession'] as Map),
+              )
+              : null,
       timestamp: timestamp ?? DateTime.now(),
     );
   }
@@ -86,6 +95,7 @@ class VoiceMessage {
       'audioBase64': audioBase64,
       'voiceProvider': voiceProvider,
       'conversationLanguage': conversationLanguage,
+      'studentSession': studentSession?.toJson(),
       'timestamp': timestamp.toIso8601String(),
     };
   }
@@ -113,6 +123,10 @@ class VoiceSessionState {
   final bool isTtsAvailable;
   final String? errorMessage;
   final double soundLevel; // 0.0 to 1.0 for audio wave animation
+  final StudentTutorSession? studentSession;
+  final int sessionElapsedSeconds;
+  final bool isSessionEnded;
+  final String inputLanguageCode; // 'ar' for Arabic input (ar_JO), 'en' for English (en_US)
 
   const VoiceSessionState({
     this.status = VoiceSessionStatus.idle,
@@ -124,6 +138,10 @@ class VoiceSessionState {
     this.isTtsAvailable = true,
     this.errorMessage,
     this.soundLevel = 0.0,
+    this.studentSession,
+    this.sessionElapsedSeconds = 0,
+    this.isSessionEnded = false,
+    this.inputLanguageCode = 'ar', // Default to Arabic recognition so Arabic students can speak naturally
   });
 
   bool get isListening => status == VoiceSessionStatus.listening;
@@ -140,6 +158,10 @@ class VoiceSessionState {
     bool? isTtsAvailable,
     String? errorMessage,
     double? soundLevel,
+    StudentTutorSession? studentSession,
+    int? sessionElapsedSeconds,
+    bool? isSessionEnded,
+    String? inputLanguageCode,
   }) {
     return VoiceSessionState(
       status: status ?? this.status,
@@ -151,6 +173,11 @@ class VoiceSessionState {
       isTtsAvailable: isTtsAvailable ?? this.isTtsAvailable,
       errorMessage: errorMessage,
       soundLevel: soundLevel ?? this.soundLevel,
+      studentSession: studentSession ?? this.studentSession,
+      sessionElapsedSeconds:
+          sessionElapsedSeconds ?? this.sessionElapsedSeconds,
+      isSessionEnded: isSessionEnded ?? this.isSessionEnded,
+      inputLanguageCode: inputLanguageCode ?? this.inputLanguageCode,
     );
   }
 }

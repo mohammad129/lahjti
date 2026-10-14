@@ -289,3 +289,169 @@ class StudentActivitySummary {
     required this.details,
   });
 }
+
+/// Represents one of the 4 daily tutor conversation session slots for a school student.
+@immutable
+class TeacherTutorSessionSlot {
+  final int sessionNumber; // 1, 2, 3, 4
+  final String status; // 'completed', 'active', 'not_started'
+  final int durationSeconds;
+  final int turnsCount;
+  final String? topic;
+  final String? tutorName;
+  final DateTime? startedAt;
+  final DateTime? endedAt;
+
+  const TeacherTutorSessionSlot({
+    required this.sessionNumber,
+    required this.status,
+    required this.durationSeconds,
+    this.turnsCount = 0,
+    this.topic,
+    this.tutorName,
+    this.startedAt,
+    this.endedAt,
+  });
+
+  bool get isCompleted => status == 'completed';
+  bool get isActive => status == 'active';
+  bool get isNotStarted => status == 'not_started';
+
+  int get durationMinutes => (durationSeconds / 60).round();
+
+  String durationText(bool isArabic) {
+    if (durationMinutes <= 0 && isCompleted) {
+      return isArabic ? '< 1 دقيقة' : '< 1 min';
+    }
+    if (durationMinutes <= 0) {
+      return isArabic ? '0 دقيقة' : '0 min';
+    }
+    return isArabic ? '$durationMinutes دقيقة' : '$durationMinutes min';
+  }
+}
+
+/// A common grammar or pronunciation error point identified by the AI tutor across students.
+@immutable
+class TeacherGrammarPoint {
+  final String topic;
+  final int occurrences;
+  final String recommendedAction;
+
+  const TeacherGrammarPoint({
+    required this.topic,
+    required this.occurrences,
+    required this.recommendedAction,
+  });
+}
+
+/// Summary of a student's daily 4-session English AI tutor progress for the teacher dashboard.
+@immutable
+class TeacherStudentTutorSummary {
+  final String studentId;
+  final String displayName;
+  final String avatarEmoji;
+  final String classId;
+  final String className;
+  final String cefrLevel;
+  final int totalSpokenSeconds;
+  final int completedSessionsCount;
+  final int maxDailySessions;
+  final int maxDailySeconds;
+  final bool isDailyLimitReached;
+  final bool hasActiveSession;
+  final List<TeacherTutorSessionSlot> sessions;
+  final List<String> recentTopics;
+  final String teacherNotesSuggestion;
+
+  const TeacherStudentTutorSummary({
+    required this.studentId,
+    required this.displayName,
+    this.avatarEmoji = '🎒',
+    required this.classId,
+    required this.className,
+    required this.cefrLevel,
+    required this.totalSpokenSeconds,
+    required this.completedSessionsCount,
+    this.maxDailySessions = 4,
+    this.maxDailySeconds = 3600,
+    this.isDailyLimitReached = false,
+    this.hasActiveSession = false,
+    required this.sessions,
+    this.recentTopics = const [],
+    required this.teacherNotesSuggestion,
+  });
+
+  int get totalSpokenMinutes => (totalSpokenSeconds / 60).round();
+
+  double get progressFraction {
+    if (maxDailySeconds <= 0) return 0.0;
+    return (totalSpokenSeconds / maxDailySeconds).clamp(0.0, 1.0);
+  }
+
+  bool get isGoalCompleted =>
+      completedSessionsCount >= maxDailySessions || totalSpokenSeconds >= maxDailySeconds;
+
+  String spokenTimeFormatted(bool isArabic) {
+    final mins = totalSpokenMinutes;
+    final maxMins = (maxDailySeconds / 60).round();
+    return isArabic ? '$mins / $maxMins دقيقة' : '$mins / $maxMins min';
+  }
+
+  String sessionProgressText(bool isArabic) {
+    if (isGoalCompleted) {
+      return isArabic ? 'أكمل الهدف اليومي (4/4) 🎯' : 'Daily Goal Completed (4/4) 🎯';
+    }
+    if (completedSessionsCount == 0 && !hasActiveSession) {
+      return isArabic ? 'لم يبدأ المحادثة اليوم' : 'Not started today';
+    }
+    if (hasActiveSession) {
+      return isArabic
+          ? 'جلسة نشطة الآن ($completedSessionsCount/4)'
+          : 'Active session now ($completedSessionsCount/4)';
+    }
+    return isArabic
+        ? 'أكمل $completedSessionsCount من 4 جلسات'
+        : 'Completed $completedSessionsCount of 4 sessions';
+  }
+}
+
+/// Aggregated teacher oversight data for AI tutor conversations across classrooms.
+@immutable
+class TeacherTutorOversightData {
+  final int totalStudents;
+  final int practicedTodayCount;
+  final int completedQuotaCount;
+  final int totalSpokenMinutes;
+  final double totalSpokenHours;
+  final int averageFluencyScore;
+  final int activeSessionsNow;
+  final List<TeacherGrammarPoint> commonGrammarPoints;
+  final List<TeacherStudentTutorSummary> students;
+
+  const TeacherTutorOversightData({
+    required this.totalStudents,
+    required this.practicedTodayCount,
+    required this.completedQuotaCount,
+    required this.totalSpokenMinutes,
+    required this.totalSpokenHours,
+    required this.averageFluencyScore,
+    required this.activeSessionsNow,
+    required this.commonGrammarPoints,
+    required this.students,
+  });
+
+  factory TeacherTutorOversightData.empty() {
+    return const TeacherTutorOversightData(
+      totalStudents: 0,
+      practicedTodayCount: 0,
+      completedQuotaCount: 0,
+      totalSpokenMinutes: 0,
+      totalSpokenHours: 0.0,
+      averageFluencyScore: 0,
+      activeSessionsNow: 0,
+      commonGrammarPoints: [],
+      students: [],
+    );
+  }
+}
+

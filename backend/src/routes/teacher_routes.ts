@@ -17,5 +17,19 @@ export function createTeacherRouter(controller?: TeacherController): Router {
   // 3. Teacher Student Educational Metrics (Privacy-Bounded)
   router.get('/students/:studentId', authMiddleware, activeController.getStudentDetail);
 
+  // 4. Teacher AI English Tutor Oversight Dashboard (4 Daily Sessions & Fluency)
+  router.get('/tutor-oversight', authMiddleware, activeController.getTutorOversight);
+
+  // 5. Teacher Exams Management (8 Question Types, Instant Grading & Analytics)
+  router.get('/exams', authMiddleware, activeController.listExams);
+  router.post('/exams', authMiddleware, activeController.createExam);
+  router.get('/exams/:examId', authMiddleware, activeController.getExamDetails);
+  router.get('/exams/:examId/analytics', authMiddleware, activeController.getExamAnalytics);
+
+  // 6. Educational Games Management
+  router.get('/games', authMiddleware, activeController.listGames);
+  router.post('/games', authMiddleware, activeController.createGame);
+
   return router;
 }
+

@@ -11,6 +11,7 @@ import '../../../core/utils/context_extensions.dart';
 import '../../../core/widgets/buttons/primary_button.dart';
 import '../../onboarding/presentation/providers/onboarding_provider.dart';
 import '../../school/domain/models/school_role.dart';
+import '../../auth/presentation/widgets/student_code_login_dialog.dart';
 
 /// Polished Initial Welcome Screen for Lahjti (لهجتي).
 ///
@@ -24,13 +25,14 @@ class WelcomeScreen extends ConsumerWidget {
     final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: AppColors.surfaceLight,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (modalContext) {
         return SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: AppSpacing.screenPadding,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -111,6 +113,32 @@ class WelcomeScreen extends ConsumerWidget {
                         .selectSchoolRole(SchoolRole.teacher);
                     Navigator.pop(modalContext);
                     context.push(AppRoutes.onboarding);
+                  },
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                const Divider(),
+                const SizedBox(height: AppSpacing.xs),
+                ListTile(
+                  key: const Key('modal_select_student_code_login'),
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFFEF3C7),
+                    child: Text('🔑', style: TextStyle(fontSize: 20)),
+                  ),
+                  title: const Text(
+                    'دخول سريع بكود الطالب',
+                    style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFB45309)),
+                  ),
+                  subtitle: const Text(
+                    'إذا كان لديك كود و PIN مسلم لك من مدرستك (ST-XXXXXX)',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppSpacing.borderRadiusMd,
+                    side: const BorderSide(color: Color(0xFFFDE68A)),
+                  ),
+                  onTap: () {
+                    Navigator.pop(modalContext);
+                    StudentCodeLoginDialog.show(context);
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -362,7 +390,27 @@ class WelcomeScreen extends ConsumerWidget {
                         ),
                       ),
 
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.xs),
+
+                      Center(
+                        child: TextButton.icon(
+                          key: const Key('welcome_student_code_direct_btn'),
+                          onPressed: () => StudentCodeLoginDialog.show(context),
+                          icon: const Icon(Icons.vpn_key_rounded, size: 16, color: AppColors.primary),
+                          label: Text(
+                            isArabic
+                                ? 'معك كود طالب؟ ادخل مباشرة من هنا'
+                                : 'Have a Student Code? Log in directly',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.md),
 
                       // Professional Company & Developer Reference Footer
                       Column(

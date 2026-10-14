@@ -19,6 +19,7 @@ import 'package:lahjti/features/tutor/domain/repositories/tutor_conversation_rep
 import 'package:lahjti/features/tutor/presentation/providers/voice_session_provider.dart';
 import 'package:lahjti/features/tutor/presentation/screens/tutor_conversation_screen.dart';
 import 'package:lahjti/features/tutor/presentation/widgets/tutor_avatar_view.dart';
+import 'package:lahjti/features/tutor/domain/models/student_tutor_session.dart';
 import 'package:lahjti/features/welcome/presentation/welcome_screen.dart';
 import 'package:lahjti/l10n/app_localizations.dart';
 
@@ -35,6 +36,8 @@ class _FakeTutorRepo implements TutorConversationRepository {
     String difficulty = 'a1',
     bool isSessionStart = false,
     LearnerContext? learnerContext,
+    String? sessionId,
+    int voiceDurationSeconds = 0,
   }) async {
     return VoiceMessage(
       id: 'm1',
@@ -47,6 +50,15 @@ class _FakeTutorRepo implements TutorConversationRepository {
       timestamp: DateTime.now(),
     );
   }
+
+  @override
+  Future<StudentTutorSession?> getStudentSessionStatus() async => null;
+
+  @override
+  Future<StudentTutorSession?> startStudentSession() async => null;
+
+  @override
+  Future<StudentTutorSession?> endStudentSession({String? sessionId}) async => null;
 }
 
 Widget _createTestContainer({

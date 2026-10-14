@@ -343,6 +343,17 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
+            // 3.5. Educational Games Hub Banner
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 4,
+                ),
+                child: _buildGamesHubBanner(context, isArabic),
+              ),
+            ),
+
             // 4. Today's Daily Learning Tasks List Section
             SliverToBoxAdapter(
               child: Padding(
@@ -862,6 +873,7 @@ class HomeScreen extends ConsumerWidget {
                 }
               },
               style: OutlinedButton.styleFrom(
+                minimumSize: Size.zero,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 6,
@@ -890,46 +902,122 @@ class HomeScreen extends ConsumerWidget {
     dynamic l10n,
     AccountContext accountContext,
   ) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildQuickActionButton(
-            context,
-            icon: Icons.menu_book_rounded,
-            label: l10n.vocabulary,
-            color: AppColors.primary,
-            route: AppRoutes.vocabulary,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickActionButton(
+                context,
+                icon: Icons.menu_book_rounded,
+                label: l10n.vocabulary,
+                color: AppColors.primary,
+                route: AppRoutes.vocabulary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildQuickActionButton(
+                context,
+                icon: Icons.sports_esports_rounded,
+                label: l10n.educationalGames,
+                color: const Color(0xFF6366F1),
+                route: AppRoutes.games,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildQuickActionButton(
+                context,
+                icon: Icons.quiz_rounded,
+                label: l10n.exams,
+                color: const Color(0xFF0D9488),
+                route: AppRoutes.exams,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildQuickActionButton(
+                context,
+                icon: Icons.insights_rounded,
+                label: l10n.progressTitle,
+                color: const Color(0xFFD97706),
+                route: AppRoutes.progress,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildQuickActionButton(
-            context,
-            icon: Icons.sports_esports_rounded,
-            label: l10n.educationalGames,
-            color: const Color(0xFF6366F1),
-            route: AppRoutes.games,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildQuickActionButton(
-            context,
-            icon: Icons.quiz_rounded,
-            label: l10n.exams,
-            color: const Color(0xFF0D9488),
-            route: AppRoutes.exams,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildQuickActionButton(
-            context,
-            icon: Icons.insights_rounded,
-            label: l10n.progressTitle,
-            color: const Color(0xFFD97706),
-            route: AppRoutes.progress,
-          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                key: const Key('home_plans_quick_btn'),
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => context.push(AppRoutes.plans),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🎯', style: TextStyle(fontSize: 14)),
+                      SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'الخطط المنظمة',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: InkWell(
+                key: const Key('home_mistakes_quick_btn'),
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => context.push(AppRoutes.studentMistakes),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF312E81), Color(0xFF4338CA)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🧠', style: TextStyle(fontSize: 14)),
+                      SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'بنك أخطائي',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

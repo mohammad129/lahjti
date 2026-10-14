@@ -22,6 +22,7 @@ import {
   LanguageModelProvider,
 } from './language_model_provider.js';
 import { MockLanguageModelProvider } from './mock_provider.js';
+import { DynamicBilingualEngine } from '../services/dynamic_bilingual_engine.js';
 
 
 function extractJson(text: string): unknown {
@@ -44,7 +45,7 @@ export class OpenAiLanguageModelProvider implements LanguageModelProvider {
     baseUrl?: string
   ) {
     this.apiKey = apiKey;
-    this.model = model;
+    this.model = model.trim();
     this.timeoutMs = timeoutMs;
     const cleanUrl = baseUrl?.trim();
     if (cleanUrl) {
@@ -62,30 +63,7 @@ export class OpenAiLanguageModelProvider implements LanguageModelProvider {
    * provider and preserves the learner's input language until AI recovers.
    */
   private resilientConversation(request: TutorConversationRequest): AiTutorConversationOutput {
-    const isArabic = /[\u0600-\u06ff]/.test(request.userMessage);
-    const isDunya = request.tutorPersona === 'dunya';
-    if (isArabic) {
-      return AiTutorConversationOutputSchema.parse({
-        tutorResponse: isDunya
-          ? '\u0623\u0647\u0644\u0627 \u0641\u064a\u0643! \u0627\u0644\u0645\u0639\u0644\u0645 \u0627\u0644\u0630\u0643\u064a \u0631\u0627\u062d \u064a\u0631\u062c\u0639 \u0628\u0639\u062f \u0634\u0648\u064a. \u0642\u0644\u0651\u064a \u0634\u0648 \u062d\u0627\u0628\u0628 \u062a\u062a\u062f\u0631\u0628 \u0639\u0644\u064a\u0647\u061f'
-          : '\u064a\u0627 \u0647\u0644\u0627 \u0641\u064a\u0643! \u0627\u0644\u0645\u0639\u0644\u0645 \u0627\u0644\u0630\u0643\u064a \u0631\u0627\u062d \u064a\u0631\u062c\u0639 \u0628\u0639\u062f \u0634\u0648\u064a. \u0627\u062d\u0643\u064a\u0644\u064a \u0634\u0648 \u062d\u0627\u0628\u0628 \u0646\u062a\u062f\u0631\u0628 \u0639\u0644\u064a\u0647 \u0627\u0644\u064a\u0648\u0645\u061f',
-        correctedVersion: null,
-        explanationArabic: '\u0627\u0644\u0631\u062f \u0627\u0644\u0630\u0643\u064a \u0645\u062a\u0639\u0628 \u0634\u0648\u064a\u060c \u0628\u0633 \u0628\u0646\u0643\u0645\u0651\u0644 \u0627\u0644\u062a\u062f\u0631\u0651\u0628.',
-        detectedErrors: [],
-        shouldCorrect: false,
-        encouragement: '\u064a\u0644\u0627 \u0646\u0643\u0645\u0651\u0644!',
-        nextDifficulty: 'same',
-      });
-    }
-    return AiTutorConversationOutputSchema.parse({
-      tutorResponse: 'I am reconnecting to the tutor service. What would you like to practise today?',
-      correctedVersion: null,
-      explanationArabic: '\u0627\u0644\u0645\u0639\u0644\u0645 \u0627\u0644\u0630\u0643\u064a \u064a\u0639\u064a\u062f \u0627\u0644\u0627\u062a\u0635\u0627\u0644 \u0627\u0644\u0622\u0646.',
-      detectedErrors: [],
-      shouldCorrect: false,
-      encouragement: 'Let\'s keep going!',
-      nextDifficulty: 'same',
-    });
+    return DynamicBilingualEngine.processTurn(request);
   }
 
   async evaluate(
@@ -121,13 +99,13 @@ export class OpenAiLanguageModelProvider implements LanguageModelProvider {
         signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch (err: any) {
-      console.warn(`⚠️ Upstream AI evaluation call failed (${err?.message}). Delegating to resilient engine.`);
+      console.warn(`⚠️ Upstream AI evaluation call to ${this.baseUrl} failed (${err?.message}). Delegating to resilient engine.`);
       const fallback = new MockLanguageModelProvider();
       return fallback.evaluate(request, _context);
     }
 
     if (!response.ok) {
-      console.warn(`⚠️ Upstream AI evaluation returned ${response.status}. Delegating to resilient engine.`);
+      console.warn(`⚠️ Upstream AI evaluation to ${this.baseUrl} returned ${response.status}. Delegating to resilient engine.`);
       const fallback = new MockLanguageModelProvider();
       return fallback.evaluate(request, _context);
     }
@@ -179,30 +157,33 @@ export class OpenAiLanguageModelProvider implements LanguageModelProvider {
 
     let response: Response;
     try {
+      const payload = {
+        model: this.model,
+        temperature: 0.7,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      };
+      console.log('Sending OpenAI payload:', JSON.stringify(payload).substring(0, 200) + '...');
       response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.apiKey}`,
         },
-        body: JSON.stringify({
-          model: this.model,
-          temperature: 0.7,
-          response_format: { type: 'json_object' },
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-        }),
+        body: JSON.stringify(payload),
         signal: AbortSignal.timeout(this.timeoutMs),
       });
     } catch (err: any) {
-      console.warn(`⚠️ Upstream AI conversation call failed (${err?.message}). Delegating to resilient pedagogical engine.`);
+      console.warn(`⚠️ Upstream AI conversation call to ${this.baseUrl} failed (${err?.message}). Delegating to resilient pedagogical engine.`);
       return this.resilientConversation(request);
     }
 
     if (!response.ok) {
-      console.warn(`⚠️ Upstream AI conversation returned status ${response.status}. Delegating to resilient pedagogical engine.`);
+      const errorText = await response.text();
+      console.error(`⚠️ Upstream AI conversation to ${this.baseUrl} returned status ${response.status}. Body: ${errorText}. Delegating to resilient pedagogical engine.`);
       return this.resilientConversation(request);
     }
 

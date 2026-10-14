@@ -1,4 +1,5 @@
 import '../../../learning/domain/models/learner_context.dart';
+import '../../domain/models/student_tutor_session.dart';
 import '../../domain/models/voice_session_state.dart';
 import '../../domain/repositories/tutor_conversation_repository.dart';
 
@@ -19,6 +20,8 @@ class TutorConversationRepositoryImpl implements TutorConversationRepository {
     String difficulty = 'a1',
     bool isSessionStart = false,
     LearnerContext? learnerContext,
+    String? sessionId,
+    int voiceDurationSeconds = 0,
   }) async {
     final isAbbas = tutorId == 'abbas';
     final trimmed = userText.trim();
@@ -120,6 +123,51 @@ class TutorConversationRepositoryImpl implements TutorConversationRepository {
       encouragement: encouragement,
       nextDifficulty: 'same',
       timestamp: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<StudentTutorSession?> getStudentSessionStatus() async {
+    return const StudentTutorSession(
+      isSchoolStudent: true,
+      maxDailySessions: 4,
+      completedSessionsCount: 0,
+      currentSessionNumber: 1,
+      remainingSessions: 4,
+      maxDailySeconds: 3600,
+      totalSecondsUsedToday: 0,
+      remainingSecondsToday: 3600,
+      canStartOrContinueSession: true,
+    );
+  }
+
+  @override
+  Future<StudentTutorSession?> startStudentSession() async {
+    return const StudentTutorSession(
+      isSchoolStudent: true,
+      maxDailySessions: 4,
+      completedSessionsCount: 0,
+      currentSessionNumber: 1,
+      remainingSessions: 4,
+      maxDailySeconds: 3600,
+      totalSecondsUsedToday: 0,
+      remainingSecondsToday: 3600,
+      canStartOrContinueSession: true,
+    );
+  }
+
+  @override
+  Future<StudentTutorSession?> endStudentSession({String? sessionId}) async {
+    return const StudentTutorSession(
+      isSchoolStudent: true,
+      maxDailySessions: 4,
+      completedSessionsCount: 1,
+      currentSessionNumber: 2,
+      remainingSessions: 3,
+      maxDailySeconds: 3600,
+      totalSecondsUsedToday: 900,
+      remainingSecondsToday: 2700,
+      canStartOrContinueSession: true,
     );
   }
 }

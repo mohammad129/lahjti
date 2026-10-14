@@ -1,6 +1,7 @@
 import { config } from '../config/env.js';
 import { getDatabase } from '../db/index.js';
 import { AiOutputValidationError, AiTimeoutError, ForbiddenError, RateLimitError } from '../errors/api_error.js';
+import { AzureOpenAiLanguageModelProvider } from '../providers/azure_openai_provider.js';
 import { GeminiLanguageModelProvider } from '../providers/gemini_provider.js';
 import {
   EvaluationContext,
@@ -41,6 +42,14 @@ export class TutorConversationService {
             config.AI_ADVANCED_MODEL || config.AI_MODEL,
             this.timeoutMs,
             config.OPENAI_BASE_URL
+          );
+          break;
+        case 'azure_openai':
+          this.provider = new AzureOpenAiLanguageModelProvider(
+            config.AZURE_OPENAI_API_KEY,
+            config.AZURE_OPENAI_ENDPOINT,
+            config.AZURE_OPENAI_DEPLOYMENT,
+            this.timeoutMs
           );
           break;
         case 'mock':
@@ -114,6 +123,18 @@ export class TutorConversationService {
     );
     if (!quotaCheck.allowed) {
       throw new RateLimitError(quotaCheck.reason || 'AI conversation quota exceeded');
+    }
+
+    // 2.5 School Student 4-Session & 1-Hour Limit Enforcement
+    const isStudent = await usageMeteringService.isSchoolStudent(userId);
+    if (isStudent) {
+      const studentStatus = await usageMeteringService.getStudentSessionStatus(userId);
+      if (!studentStatus.canStartOrContinueSession) {
+        throw new RateLimitError(
+          studentStatus.limitReason ||
+            'أحسنت يا بطل! أنهيت جلساتك أو وقت المحادثة لليوم. نراك غداً لمتابعة التعلّم!'
+        );
+      }
     }
 
     // 3. Cost & Sanity Guard: Truncate user message
@@ -199,6 +220,16 @@ export class TutorConversationService {
         outputTokens: estimatedOutputTokens,
         voiceSeconds: voiceDurationSeconds,
       });
+
+      // 7. Record student session duration and attach status
+      if (isStudent) {
+        await usageMeteringService.recordStudentTurn(
+          userId,
+          voiceDurationSeconds > 0 ? voiceDurationSeconds : 10,
+          request.sessionId
+        );
+        outputData.studentSession = await usageMeteringService.getStudentSessionStatus(userId);
+      }
 
       return outputData;
     } finally {

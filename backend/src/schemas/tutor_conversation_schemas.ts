@@ -64,6 +64,23 @@ export const TutorConversationRequestSchema = z.object({
   voiceDurationSeconds: z.number().min(0).max(300).default(0),
   // Step 28 ElevenLabs Voice Synthesis Option
   synthesizeVoice: z.boolean().default(false),
+  // Optional active session identifier for school student tracking
+  sessionId: z.string().max(128).optional(),
+});
+
+export const StudentSessionStatusSchema = z.object({
+  isSchoolStudent: z.boolean(),
+  maxDailySessions: z.number().default(4),
+  completedSessionsCount: z.number().default(0),
+  currentSessionNumber: z.number().default(1),
+  remainingSessions: z.number().default(4),
+  maxDailySeconds: z.number().default(3600),
+  totalSecondsUsedToday: z.number().default(0),
+  remainingSecondsToday: z.number().default(3600),
+  activeSessionId: z.string().nullable().optional(),
+  activeSessionDurationSeconds: z.number().default(0),
+  canStartOrContinueSession: z.boolean().default(true),
+  limitReason: z.string().nullable().optional(),
 });
 
 export const AiTutorConversationOutputSchema = z.object({
@@ -78,10 +95,16 @@ export const AiTutorConversationOutputSchema = z.object({
   audioBase64: z.string().nullable().optional(),
   voiceProvider: z.string().nullable().optional(),
   conversationLanguage: z.string().min(2).max(30).optional(),
+  // School Student Daily 4-Session & 1-Hour Cap Status
+  studentSession: StudentSessionStatusSchema.nullable().optional(),
+});
+
+export const StudentSessionActionRequestSchema = z.object({
+  sessionId: z.string().max(128).optional(),
 });
 
 export const TtsSynthesizeRequestSchema = z.object({
-  text: z.string().min(1).max(1000),
+  text: z.string().min(1).max(3000),
   tutorPersona: TutorPersonaEnum.default('abbas'),
   targetLanguage: z.enum(SupportedTargetLanguages).default('english'),
   voiceId: z.string().max(100).optional(),

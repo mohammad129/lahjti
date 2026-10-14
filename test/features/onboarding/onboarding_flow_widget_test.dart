@@ -14,7 +14,18 @@ import 'package:lahjti/features/onboarding/presentation/steps/account_registrati
 import 'package:lahjti/features/onboarding/presentation/steps/tutor_selection_step.dart';
 import 'package:lahjti/features/onboarding/presentation/steps/completion_step.dart';
 import 'package:lahjti/core/widgets/buttons/primary_button.dart';
+import 'package:lahjti/features/auth/data/repositories/mock_auth_repository.dart';
+import 'package:lahjti/features/auth/presentation/providers/auth_provider.dart';
 import 'package:lahjti/l10n/app_localizations.dart';
+
+ProviderContainer createTestContainer({List<Override> overrides = const []}) {
+  return ProviderContainer(
+    overrides: [
+      authRepositoryProvider.overrideWithValue(MockAuthRepository()),
+      ...overrides,
+    ],
+  );
+}
 
 void main() {
   Widget createOnboardingWidget({
@@ -34,11 +45,19 @@ void main() {
               (context, state) =>
                   const Scaffold(body: Center(child: Text('Home Page'))),
         ),
+        GoRoute(
+          path: '/tutor',
+          builder:
+              (context, state) =>
+                  const Scaffold(body: Center(child: Text('Home Page'))),
+        ),
       ],
     );
 
+    final defaultContainer = createTestContainer();
+
     return UncontrolledProviderScope(
-      container: container ?? ProviderContainer(),
+      container: container ?? defaultContainer,
       child: MaterialApp.router(
         locale: locale,
         theme: AppTheme.lightTheme,
@@ -162,7 +181,7 @@ void main() {
       '4. Step 6: Registration validation (empty, invalid email, weak password, mismatch)',
       (WidgetTester tester) async {
         setMobileScreenSize(tester);
-        final container = ProviderContainer();
+        final container = createTestContainer();
         container.read(onboardingProvider.notifier).goToStep(5);
 
         await tester.pumpWidget(createOnboardingWidget(container: container));
@@ -197,7 +216,7 @@ void main() {
         await tester.tap(continueButton);
         await tester.pumpAndSettle();
         expect(
-          find.text('كلمة المرور لازم تكون أقوى (6 خانات على الأقل).'),
+          find.text('كلمة المرور لازم تكون 8 خانات على الأقل.'),
           findsOneWidget,
         );
 
@@ -223,7 +242,7 @@ void main() {
       '5. Step 7 to 10: Tutor selection, Placement Intro, Results, and completion to Home navigation',
       (WidgetTester tester) async {
         setMobileScreenSize(tester);
-        final container = ProviderContainer();
+        final container = createTestContainer();
         container.read(onboardingProvider.notifier).goToStep(6);
 
         await tester.pumpWidget(createOnboardingWidget(container: container));

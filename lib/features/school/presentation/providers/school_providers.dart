@@ -212,3 +212,38 @@ final teacherStudentAttentionProvider = FutureProvider.family<
     schoolCode: schoolCode,
   );
 });
+
+/// StateProvider for filtering the Teacher AI Tutor dashboard by classroom ID (null = All Classes).
+final selectedTutorClassFilterProvider = StateProvider<String?>((ref) => null);
+
+/// Provider for Teacher AI Tutor conversation oversight, 4-session tracking, and class fluency metrics.
+final teacherTutorOversightProvider =
+    FutureProvider<TeacherTutorOversightData>((ref) async {
+      final repo = ref.watch(teacherDashboardRepositoryProvider);
+      final onboardingData = ref.watch(
+        onboardingProvider.select((s) => s.data),
+      );
+      final teacherProfile = ref.watch(currentTeacherProfileProvider);
+      final selectedClassId = ref.watch(selectedTutorClassFilterProvider);
+
+      final teacherId = teacherProfile?.teacherId ?? 'teacher_default';
+      final schoolCode =
+          teacherProfile?.schoolCode ?? onboardingData.schoolCode ?? 'SCH-1001';
+
+      return repo.getTutorOversight(
+        teacherId: teacherId,
+        schoolCode: schoolCode,
+        classId: selectedClassId,
+      );
+    });
+
+/// StateProvider holding the currently inspected student in the AI Tutor session detail modal.
+final teacherSelectedTutorStudentModalProvider =
+    StateProvider<TeacherStudentTutorSummary?>((ref) => null);
+
+/// StateProvider for switching between Teacher Dashboard tabs:
+/// 0: Overview & Classes (نظرة عامة والصفوف)
+/// 1: AI English Tutor Oversight (متابعة الذكاء الاصطناعي - 4 جلسات)
+final teacherActiveTabProvider = StateProvider<int>((ref) => 0);
+
+
